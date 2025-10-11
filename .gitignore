@@ -361,3 +361,29 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+
+# Fișiere temporare și build
+bin/
+obj/
+out/
+
+# Setări locale Visual Studio
+.vs/
+*.user
+*.suo
+
+# Fișiere de configurare sensibile
+appsettings.Development.json
+
+# Cache
+*.log
+*.tmp
+
+# Fisiere generate automat
+wwwroot/lib/
+node_modules/
+
+# Alte foldere/fișiere pe care NU vrei să le urci
+SecretFolder/
+*.secret
