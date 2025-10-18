@@ -1,0 +1,30 @@
+<aside 
+      [class.w-16]="sidebarService.isCollapsed()"
+      [class.w-64]="!sidebarService.isCollapsed()"
+      class="border-r bg-background transition-all duration-300">
+      
+      <div class="flex items-center gap-2 px-2 py-4 border-b">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+          <span class="text-lg font-bold">A</span>
+        </div>
+        <div *ngIf="!sidebarService.isCollapsed()" class="flex flex-col gap-0.5">
+          <span class="text-sm font-semibold">Process Image</span>
+          <span class="text-xs text-muted-foreground">Modern Platform</span>
+        </div>
+      </div>
+
+      <nav class="p-2">
+        <div class="space-y-1">
+          <a 
+            *ngFor="let item of navItems"
+            [routerLink]="item.href"
+            routerLinkActive="bg-accent"
+            [routerLinkActiveOptions]="{exact: item.href === '/'}"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors"
+            [title]="sidebarService.isCollapsed() ? item.title : ''">
+            <span [innerHTML]="item.icon" class="h-5 w-5 shrink-0"></span>
+            <span *ngIf="!sidebarService.isCollapsed()">{{ item.title }}</span>
+          </a>
+        </div>
+      </nav>
+    </aside>

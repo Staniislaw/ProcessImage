@@ -1,0 +1,57 @@
+<div class="flex flex-col gap-12 p-6">
+      <!-- Hero Section -->
+      <div class="flex flex-col items-center justify-center text-center space-y-6 py-12">
+        <div class="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.583a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+          </svg>
+          <span>Welcome to Your Modern Platform</span>
+        </div>
+        <h1 class="text-5xl font-bold tracking-tight max-w-4xl">
+          Build Amazing Experiences
+        </h1>
+        <p class="text-xl text-muted-foreground max-w-2xl">
+          A modern, clean interface designed for productivity and efficiency. 
+          Navigate seamlessly through your dashboard and analytics.
+        </p>
+        <div class="flex gap-4 pt-4">
+          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8">
+            Get Started
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+            </svg>
+          </button>
+          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium border bg-background hover:bg-accent h-11 px-8">
+            Learn More
+          </button>
+        </div>
+      </div>
+
+      <!-- Features Grid -->
+      <div class="grid gap-6 md:grid-cols-3">
+        <div *ngFor="let feature of features" class="rounded-lg border bg-card text-card-foreground shadow-sm">
+          <div class="p-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-4">
+              <span [innerHTML]="feature.icon" class="h-6 w-6 text-primary"></span>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">{{ feature.title }}</h3>
+            <p class="text-sm text-muted-foreground mb-4">{{ feature.description }}</p>
+            <p class="text-sm text-muted-foreground">{{ feature.content }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA Section -->
+      <div class="rounded-lg border bg-primary text-primary-foreground shadow-sm">
+        <div class="p-6 text-center pb-4">
+          <h2 class="text-2xl font-semibold mb-2">Ready to Get Started?</h2>
+          <p class="text-primary-foreground/80 mb-4">Join thousands of users who trust our platform</p>
+          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 h-11 px-8">
+            Start Your Journey
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>

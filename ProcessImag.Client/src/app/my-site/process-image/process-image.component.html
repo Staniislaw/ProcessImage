@@ -1,0 +1,180 @@
+<div class="container">
+  <!-- Toast Notification -->
+  <div class="toast" [class.show]="showToast">
+    {{ toastMessage }}
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Image Processing</h1>
+    <p class="subtitle">Upload an image, apply filters, and download the result</p>
+  </div>
+
+  <div class="grid">
+    <!-- Upload Area Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <span class="material-icons">upload</span>
+          Upload Image
+        </h2>
+        <p class="card-description">Drag and drop or click to select an image</p>
+      </div>
+      <div class="card-content">
+        <div 
+          class="upload-area"
+          [class.dragging]="isDragging"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          (drop)="onDrop($event)"
+          (click)="openFileDialog()"
+        >
+          <input
+            #fileInput
+            type="file"
+            accept="image/*"
+            (change)="onFileInputChange($event)"
+            style="display: none"
+          />
+          
+          <div *ngIf="originalImage; else placeholder" class="image-preview">
+            <img [src]="originalImage" alt="Original" class="preview-img" />
+            <p class="preview-text">Click to change image</p>
+          </div>
+
+          <ng-template #placeholder>
+            <div class="placeholder">
+              <div class="icon-circle">
+                <span class="material-icons icon-large">image</span>
+              </div>
+              <div class="placeholder-text">
+                <p class="upload-title">{{ isDragging ? 'Drop image here' : 'Upload an image' }}</p>
+                <p class="upload-subtitle">Supports JPG, PNG, GIF, WEBP</p>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Selection Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <span class="material-icons">auto_fix_high</span>
+          Select Filter
+        </h2>
+        <p class="card-description">Choose and customize your filter</p>
+      </div>
+      <div class="card-content filter-content">
+        <!-- Filter Tabs -->
+        <div class="tabs">
+          <div class="tab-row">
+            <button
+              *ngFor="let filter of firstRowFilters"
+              class="tab-button"
+              [class.active]="selectedFilter.type === filter.type"
+              (click)="selectFilter(filter)"
+            >
+              <span class="material-icons">{{ filter.icon }}</span>
+              <span class="tab-label">{{ filter.label }}</span>
+            </button>
+          </div>
+          <div class="tab-row">
+            <button
+              *ngFor="let filter of secondRowFilters"
+              class="tab-button"
+              [class.active]="selectedFilter.type === filter.type"
+              (click)="selectFilter(filter)"
+            >
+              <span class="material-icons">{{ filter.icon }}</span>
+              <span class="tab-label">{{ filter.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Info -->
+        <div class="filter-info">
+          <span class="material-icons filter-icon">{{ selectedFilter.icon }}</span>
+          <div>
+            <p class="filter-label">{{ selectedFilter.label }}</p>
+            <p class="filter-description">{{ selectedFilter.description }}</p>
+          </div>
+        </div>
+
+        <!-- Slider -->
+        <div class="slider-container">
+          <div class="slider-header">
+            <label>Intensity</label>
+            <span class="slider-value">{{ filterValue }}{{ selectedFilter.unit }}</span>
+          </div>
+          <input
+            type="range"
+            class="slider"
+            [min]="selectedFilter.min"
+            [max]="selectedFilter.max"
+            [(ngModel)]="filterValue"
+            step="1"
+          />
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+          <button
+            class="btn btn-primary"
+            [disabled]="!originalImage || isProcessing"
+            (click)="processImage()"
+          >
+            <span class="material-icons" [class.spinning]="isProcessing">auto_fix_high</span>
+            {{ isProcessing ? 'Processing...' : 'Process Image' }}
+          </button>
+          <button
+            class="btn btn-outline btn-icon"
+            [disabled]="!originalImage"
+            (click)="resetImage()"
+          >
+            <span class="material-icons">refresh</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Card -->
+  <div class="card result-card" *ngIf="processedImage">
+    <div class="card-header">
+      <div class="result-header">
+        <div>
+          <h2 class="card-title">
+            <span class="material-icons">auto_awesome</span>
+            Processed Result
+          </h2>
+          <p class="card-description">Compare original and processed images</p>
+        </div>
+        <button class="btn btn-primary" (click)="downloadImage()">
+          <span class="material-icons">download</span>
+          Download
+        </button>
+      </div>
+    </div>
+    <div class="card-content">
+      <div class="comparison-grid">
+        <div class="comparison-item">
+          <label class="comparison-label">Original</label>
+          <div class="comparison-image">
+            <img [src]="originalImage" alt="Original" />
+          </div>
+        </div>
+        <div class="comparison-item">
+          <label class="comparison-label">Processed ({{ selectedFilter.label }})</label>
+          <div class="comparison-image processed">
+            <img [src]="processedImage" alt="Processed" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden canvas for processing -->
+  <canvas #canvas style="display: none"></canvas>
+</div>

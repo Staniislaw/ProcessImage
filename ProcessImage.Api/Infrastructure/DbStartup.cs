@@ -2,6 +2,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using ProcessImage.Entities;
+
 using System.Reflection;
 
 namespace ProcessImage.Infrastructure
@@ -16,6 +18,11 @@ namespace ProcessImage.Infrastructure
                     connectionString,
                     b => b.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name)
                 ));
+
+            services.AddDbContext<PpawLab02Context>(options =>
+                options.UseSqlServer(connectionString)
+            );
+
 
         }
 
