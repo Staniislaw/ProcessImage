@@ -1,9 +1,9 @@
 ﻿// ProcessImage/Controllers/SubscriptionsController.cs
 
 using Data.SDK.Repository;
-using ProcessImage.Entities; 
+using ProcessImage.Entities;
 using Microsoft.AspNetCore.Mvc;
-using ProcessImage.repository;
+using ProcessImage.repository.Interface;
 
 [Route("api/[controller]")]
 [ApiController]

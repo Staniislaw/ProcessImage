@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using ProcessImage.Entities;
+using ProcessImage.repository.Interface;
 
 namespace ProcessImage.repository
 {

@@ -4,6 +4,9 @@ using ProcessImage.Domain;
 
 using static System.Net.Mime.MediaTypeNames;
 using ProcessImage.repository;
+using ProcessImage.repository.Interface;
+using ProcessImage.Repository;
+using ProcessImage.Repository.Interfaces;
 namespace ProcessImage.Infrastructure
 {
     public class DependencyStartup : IBaseStartup
@@ -12,6 +15,8 @@ namespace ProcessImage.Infrastructure
         {
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IAccesor, Accesor>();
+            services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+            services.AddScoped<IUtilizatorRepository, UtilizatorRepository>();
             //services.AddScoped<IUserService, UserService>();
         }
 

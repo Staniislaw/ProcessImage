@@ -1,21 +1,21 @@
-import { Component, inject, HostListener } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
+import { LoginModalComponent } from '../login/login-modal.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './header.component.html',
-  styleUrl: './header.component.css'
+  imports: [CommonModule, LoginModalComponent],
+  templateUrl: './header.component.html'
 })
 export class AppHeaderComponent {
-  // Inject services
   authService = inject(AuthService);
   private sidebarService = inject(SidebarService);
 
   isDropdownOpen = false;
+  showLoginModal = false;
 
   toggleSidebar() {
     this.sidebarService.toggle();
@@ -25,21 +25,16 @@ export class AppHeaderComponent {
     this.isDropdownOpen = !this.isDropdownOpen;
   }
 
-  signIn() {
-    this.authService.signIn('user@example.com', 'password');
+  openLoginModal() {
+    this.showLoginModal = true;
+  }
+
+  closeLoginModal() {
+    this.showLoginModal = false;
   }
 
   signOut() {
     this.authService.signOut();
     this.isDropdownOpen = false;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    const dropdown = target.closest('.relative');
-    if (!dropdown && this.isDropdownOpen) {
-      this.isDropdownOpen = false;
-    }
   }
 }

@@ -1,7 +1,7 @@
 ﻿using Data.SDK.Repository;
 
 using ProcessImage.Entities;
-namespace ProcessImage.repository
+namespace ProcessImage.repository.Interface
 {
     public interface IAccesor : IRepository<Subscription>
     {

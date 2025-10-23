@@ -35,7 +35,7 @@ public partial class PpawLab02Context : DbContext
         {
             entity.ToTable("Subscripte_Procesare");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.LimitaMax).HasColumnName("Limita_Max");
 
             entity.HasOne(d => d.Subscriptie).WithMany(p => p.SubscripteProcesares)
@@ -84,7 +84,7 @@ public partial class PpawLab02Context : DbContext
         {
             entity.ToTable("Tip_Procesare");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Nume)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -95,7 +95,7 @@ public partial class PpawLab02Context : DbContext
         {
             entity.ToTable("Utilizator");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Email).IsUnicode(false);
             entity.Property(e => e.Nume)
                 .HasMaxLength(150)
