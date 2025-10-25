@@ -1,0 +1,27 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+  <div class="bg-white shadow rounded-lg p-8 w-full max-w-md border">
+    <h2 class="text-2xl font-bold text-center mb-6">Înregistrează-te</h2>
+
+    <form (ngSubmit)="register()" class="flex flex-col gap-4">
+      <input [(ngModel)]="name" name="name" placeholder="Nume complet" required
+        class="border p-3 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <input [(ngModel)]="email" name="email" type="email" placeholder="Email" required
+        class="border p-3 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <input [(ngModel)]="password" name="password" type="password" placeholder="Parolă" required
+        class="border p-3 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <input [(ngModel)]="confirmPassword" name="confirmPassword" type="password" placeholder="Confirmă parola" required
+        class="border p-3 rounded-lg focus:ring-2 focus:ring-blue-500">
+
+      <button type="submit"
+        class="bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">Înregistrează-te</button>
+
+      <p *ngIf="errorMessage" class="text-red-500 text-center">{{ errorMessage }}</p>
+      <p *ngIf="successMessage" class="text-green-600 text-center">{{ successMessage }}</p>
+    </form>
+
+    <p class="text-center text-sm text-gray-600 mt-6">
+      Ai deja cont?
+      <a routerLink="/login" class="text-blue-600 hover:underline">Autentifică-te</a>
+    </p>
+  </div>
+</div>

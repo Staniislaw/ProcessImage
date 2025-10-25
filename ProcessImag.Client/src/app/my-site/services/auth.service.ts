@@ -1,7 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface User {
   id: number;
@@ -35,45 +36,61 @@ export interface ChangePasswordRequest {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://localhost:7048/api/Utilizator'; 
-
-  private userSignal = signal<User | null>(null);
-  user = this.userSignal.asReadonly();
-
+  private apiUrl = environment.apiBaseUrl + '/Utilizator';
   tokenKey = 'jwt_token';
 
+  private userSignal = signal<User | null>(null);
+  private loadingSignal = signal<boolean>(true); 
+
+  user = this.userSignal.asReadonly();
+  loading = this.loadingSignal.asReadonly(); 
+
   constructor(private http: HttpClient) {
+    this.initializeAuth();
+  }
+
+  private initializeAuth(): void {
     const token = localStorage.getItem(this.tokenKey);
     if (token) {
+      console.log('✅ Token găsit, încarc profilul...');
       this.loadProfile().subscribe({
-        next: () => {},
-        error: () => this.signOut()
+        next: () => {
+          console.log('✅ Profil încărcat cu succes');
+          this.loadingSignal.set(false);
+        },
+        error: (err) => {
+          console.error('❌ Eroare la încărcarea profilului:', err);
+          this.signOut();
+          this.loadingSignal.set(false);
+        }
       });
+    } else {
+      console.log('⚠️ Nu există token salvat');
+      this.loadingSignal.set(false);
     }
   }
 
-  login(request: { email: string; parola: string }) {
-  return this.http.post(`${this.apiUrl}/login`, request).pipe(
-    tap((response: any) => {
-      localStorage.setItem(this.tokenKey, response.token);
-      this.userSignal.set({
-        id: response.utilizator.id,
-        name: response.utilizator.nume,
-        email: response.utilizator.email,
-        isAuthenticated: true
-      });
-    })
-  );
-}
-
+  login(request: { email: string; parola: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/login`, request).pipe(
+      tap((response: any) => {
+        localStorage.setItem(this.tokenKey, response.token);
+        console.log('✅ Token salvat');
+        this.userSignal.set({
+          id: response.utilizator.id,
+          name: response.utilizator.nume,
+          email: response.utilizator.email,
+          isAuthenticated: true
+        });
+      })
+    );
+  }
 
   register(request: RegisterRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, request);
   }
 
   loadProfile(): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.get(`${this.apiUrl}/profil`, { headers }).pipe(
+    return this.http.get(`${this.apiUrl}/profil`).pipe(
       tap((user: any) => {
         this.userSignal.set({
           id: user.id,
@@ -86,31 +103,24 @@ export class AuthService {
   }
 
   updateProfile(request: UpdateProfilRequest): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.put(`${this.apiUrl}/update-profil`, request, { headers }).pipe(
-      tap(() => this.userSignal.update(u => ({ ...u!, nume: request.nume ?? u!.name })))
+    return this.http.put(`${this.apiUrl}/update-profil`, request).pipe(
+      tap(() => {
+        this.userSignal.update(u => u ? { ...u, name: request.nume } : null);
+      })
     );
   }
 
   changePassword(request: ChangePasswordRequest): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/change-password`, request, { headers });
+    return this.http.post(`${this.apiUrl}/change-password`, request);
   }
 
-  signOut() {
+  signOut(): void {
     localStorage.removeItem(this.tokenKey);
     this.userSignal.set(null);
   }
 
   isAuthenticated(): boolean {
     return !!this.userSignal() && this.userSignal()?.isAuthenticated === true;
-  }
-
-  getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem(this.tokenKey);
-    return new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
   }
 
   initials = computed(() => {

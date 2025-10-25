@@ -1,57 +1,131 @@
-<div class="flex flex-col gap-12 p-6">
-      <!-- Hero Section -->
-      <div class="flex flex-col items-center justify-center text-center space-y-6 py-12">
-        <div class="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.583a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
-          </svg>
-          <span>Welcome to Your Modern Platform</span>
-        </div>
-        <h1 class="text-5xl font-bold tracking-tight max-w-4xl">
-          Build Amazing Experiences
-        </h1>
-        <p class="text-xl text-muted-foreground max-w-2xl">
-          A modern, clean interface designed for productivity and efficiency. 
-          Navigate seamlessly through your dashboard and analytics.
-        </p>
-        <div class="flex gap-4 pt-4">
-          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8">
-            Get Started
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-            </svg>
-          </button>
-          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium border bg-background hover:bg-accent h-11 px-8">
-            Learn More
-          </button>
-        </div>
-      </div>
+<div class="subscription-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Se încarcă abonamentele...</p>
+  </div>
 
-      <!-- Features Grid -->
-      <div class="grid gap-6 md:grid-cols-3">
-        <div *ngFor="let feature of features" class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-4">
-              <span [innerHTML]="feature.icon" class="h-6 w-6 text-primary"></span>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">{{ feature.title }}</h3>
-            <p class="text-sm text-muted-foreground mb-4">{{ feature.description }}</p>
-            <p class="text-sm text-muted-foreground">{{ feature.content }}</p>
+  <!-- Error State -->
+  <div *ngIf="error" class="error-state">
+    <p>{{ error }}</p>
+    <button (click)="loadSubscriptions()" class="retry-btn">Încearcă din nou</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error" class="content">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-badge">🎯 ABONAMENTE</div>
+      <h1 class="main-title">
+        Alege planul <span class="gradient-text">perfect</span> pentru tine
+      </h1>
+      <p class="subtitle">
+        Selectează abonamentul care se potrivește cel mai bine nevoilor tale și începe să beneficiezi de toate avantajele
+      </p>
+    </div>
+
+    <!-- Plans Grid -->
+    <div class="plans-grid">
+      <div *ngFor="let sub of subscriptions" 
+           class="plan-card" 
+           [class.selected]="selectedPlanId === sub.id"
+           [class.popular]="isPopular(sub.tip)">
+        
+        <!-- Popular Badge -->
+        <div *ngIf="isPopular(sub.tip)" class="popular-badge">
+          <span>⚡ CEL MAI POPULAR</span>
+        </div>
+
+        <!-- Card Header -->
+        <div class="card-header" [style.background]="getPlanConfig(sub.tip).gradient">
+          <div class="plan-icon">{{ getPlanConfig(sub.tip).icon }}</div>
+          <h2 class="plan-type">{{ sub.tip }}</h2>
+          <p class="plan-description">{{ getPlanConfig(sub.tip).description }}</p>
+        </div>
+
+        <!-- Price Section -->
+        <div class="price-section">
+          <div class="price-wrapper">
+            <span class="currency">Lei</span>
+            <span class="price">{{ formatPrice(sub.pret) }}</span>
+            <span class="period">{{ sub.pret === 0 ? '/ gratuit' : '/ lună' }}</span>
+          </div>
+          <p class="price-info">
+            {{ sub.pret === 0 ? 'Pentru totdeauna' : 'Facturat lunar' }}
+          </p>
+        </div>
+
+        <!-- Storage Info -->
+        <div class="storage-info" [ngClass]="getPlanConfig(sub.tip).badgeColor">
+          <svg class="storage-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
+          </svg>
+          <div>
+            <p class="storage-size">{{ formatStorage(sub.dimensiuneMaximaMb) }}</p>
+            <p class="storage-label">Spațiu de stocare</p>
           </div>
         </div>
-      </div>
 
-      <!-- CTA Section -->
-      <div class="rounded-lg border bg-primary text-primary-foreground shadow-sm">
-        <div class="p-6 text-center pb-4">
-          <h2 class="text-2xl font-semibold mb-2">Ready to Get Started?</h2>
-          <p class="text-primary-foreground/80 mb-4">Join thousands of users who trust our platform</p>
-          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 h-11 px-8">
-            Start Your Journey
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-            </svg>
-          </button>
+        <!-- Processing Summary -->
+        <div class="processing-summary">
+          <div class="summary-badge" [ngClass]="hasUnlimitedProcessing(sub) ? 'unlimited' : 'limited'">
+            <span class="summary-icon">{{ hasUnlimitedProcessing(sub) ? '∞' : '📊' }}</span>
+            <span class="summary-text">{{ getProcessingSummary(sub) }}</span>
+          </div>
         </div>
+
+        <!-- Processing ID -->
+        <div class="processing-id">
+          <span class="id-label">ID PROCESARE</span>
+          <span class="id-value">#{{ sub.subscriptieProcesareId }}</span>
+        </div>
+
+        <!-- Features List -->
+        <div class="features-list">
+          <div *ngFor="let feature of getFeatures(sub)" class="feature-item">
+            <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ feature }}</span>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button 
+          (click)="selectPlan(sub)" 
+          class="select-btn"
+          [ngClass]="getPlanConfig(sub.tip).buttonColor"
+          [disabled]="selectedPlanId === sub.id">
+          <span *ngIf="selectedPlanId !== sub.id">Selectează planul</span>
+          <span *ngIf="selectedPlanId === sub.id">
+            <svg class="spinner-icon" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Se procesează...
+          </span>
+        </button>
+
+        <!-- Hover Effect Overlay -->
+        <div class="hover-overlay"></div>
       </div>
     </div>
+
+    <!-- Footer Info -->
+    <div class="footer-info">
+      <div class="info-card">
+        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p>Actualizări gratuite și suport tehnic pentru toate planurile</p>
+      </div>
+      <div class="info-card">
+        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <p>Poți schimba sau anula abonamentul oricând dorești</p>
+      </div>
+    </div>
+  </div>
+</div>

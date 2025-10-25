@@ -6,6 +6,8 @@ using System.Security.Claims;
 using System.Text;
 using ProcessImage.Entities;
 using ProcessImage.Repository.Interfaces;
+using Data.SDK.Repository;
+using ProcessImage.Services.Interface;
 
 namespace ProcessImage.Controllers
 {
@@ -13,13 +15,16 @@ namespace ProcessImage.Controllers
     [Route("api/[controller]")]
     public class UtilizatorController : ControllerBase
     {
-        private readonly IUtilizatorRepository _utilizatorRepository;
+        private readonly IRepository<Utilizator> _utilizatorRepository;
+        private readonly IRepository<Subscriptie> _subscriptieRepository;
         private readonly IConfiguration _configuration;
-
-        public UtilizatorController(IUtilizatorRepository utilizatorRepository, IConfiguration configuration)
+        private readonly IBaseService _baseService;
+        public UtilizatorController(IRepository<Utilizator> utilizatorRepository, IConfiguration configuration, IRepository<Subscriptie> subscriptieRepository, IBaseService baseService)
         {
             _utilizatorRepository = utilizatorRepository;
             _configuration = configuration;
+            _subscriptieRepository = subscriptieRepository;
+            _baseService = baseService;
         }
 
         [HttpPost("register")]
@@ -28,9 +33,16 @@ namespace ProcessImage.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Verifică dacă utilizatorul există
-            if (await _utilizatorRepository.ExistsAsync(request.Email))
+            var utilizatorExistent = await _utilizatorRepository.GetAsync(u => u.Email == request.Email);
+            if (utilizatorExistent != null)
                 return BadRequest(new { message = "Utilizatorul cu acest email există deja" });
+
+            var subscriptieFree = await _subscriptieRepository.GetAsync(s => s.Tip == "Free");
+
+            if (subscriptieFree == null)
+            {
+                return StatusCode(500, new { message = "Subscripția Free nu este configurată în sistem" });
+            }
 
             var parolaHashata = BCrypt.Net.BCrypt.HashPassword(request.Parola);
 
@@ -39,12 +51,22 @@ namespace ProcessImage.Controllers
                 Nume = request.Nume,
                 Email = request.Email,
                 Parola = parolaHashata,
-                SubscriptieId = request.SubscriptieId
+                SubscriptieId = subscriptieFree.Id
             };
-
-            var result = await _utilizatorRepository.CreateAsync(utilizator);
-
-            return Ok(new { message = "Utilizator înregistrat cu succes", utilizatorId = result.Id });
+            try
+            {
+                var result = await _utilizatorRepository.AddAsync(utilizator);
+                return Ok(new
+                {
+                    message = "Utilizator înregistrat cu succes",
+                    utilizatorId = result.Id,
+                    subscriptie = subscriptieFree.Tip
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "A apărut o eroare la înregistrare", details = ex.Message });
+            }
         }
 
         [HttpPost("login")]
@@ -53,7 +75,7 @@ namespace ProcessImage.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var utilizator = await _utilizatorRepository.GetByEmailAsync(request.Email);
+            var utilizator = await _utilizatorRepository.GetAsync(u => u.Email == request.Email);
             if (utilizator == null)
                 return Unauthorized(new { message = "Email sau parolă incorectă" });
             var isValid = BCrypt.Net.BCrypt.Verify(request.Parola, utilizator.Parola);
@@ -77,15 +99,14 @@ namespace ProcessImage.Controllers
             });
         }
 
+        // UtilizatorController.cs (sau AuthController.cs)
         [HttpGet("profil")]
         [Authorize]
         public async Task<IActionResult> GetProfil()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                return Unauthorized(new { message = "Token invalid" });
+            var userId = _baseService.GetUserId(); 
 
-            var utilizator = await _utilizatorRepository.GetByIdAsync(userId);
+            var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == userId);
             if (utilizator == null)
                 return NotFound(new { message = "Utilizator nu găsit" });
 
@@ -93,7 +114,8 @@ namespace ProcessImage.Controllers
             {
                 id = utilizator.Id,
                 nume = utilizator.Nume,
-                email = utilizator.Email
+                email = utilizator.Email,
+                subscriptieId = utilizator.SubscriptieId
             });
         }
 
@@ -108,7 +130,10 @@ namespace ProcessImage.Controllers
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 return Unauthorized(new { message = "Token invalid" });
 
-            var utilizator = await _utilizatorRepository.GetByIdAsync(userId);
+            var utilizator = await _utilizatorRepository.GetSingleWhereIncludeAsync(
+                    u => u.Id == userId,
+                    asNoTracking: true,
+                    u => u.Subscriptie);
             if (utilizator == null)
                 return NotFound(new { message = "Utilizator nu găsit" });
 
@@ -128,8 +153,10 @@ namespace ProcessImage.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 return Unauthorized(new { message = "Token invalid" });
-
-            var utilizator = await _utilizatorRepository.GetByIdAsync(userId);
+            var utilizator = await _utilizatorRepository.GetSingleWhereIncludeAsync(
+                u => u.Id == userId,
+                asNoTracking: true,
+                u => u.Subscriptie);
             if (utilizator == null)
                 return NotFound(new { message = "Utilizator nu găsit" });
 
@@ -173,7 +200,7 @@ namespace ProcessImage.Controllers
         public string Nume { get; set; }
         public string Email { get; set; }
         public string Parola { get; set; }
-        public long SubscriptieId { get; set; } 
+        public int SubscriptieId { get; set; } 
     }
 
     public class LoginRequest

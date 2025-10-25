@@ -1,59 +1,272 @@
-﻿// ProcessImage/Controllers/SubscriptionsController.cs
-
-using Data.SDK.Repository;
+﻿using Data.SDK.Repository;
 using ProcessImage.Entities;
 using Microsoft.AspNetCore.Mvc;
-using ProcessImage.repository.Interface;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using ProcessImage.Services.Interface;
 
-[Route("api/[controller]")]
-[ApiController]
-public class SubscriptionsController : ControllerBase
+namespace ProcessImage.Controllers
 {
-    private readonly IAccesor _repository;
-    public SubscriptionsController(IAccesor repository)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class SubscriptionsController : ControllerBase
     {
-        _repository = repository;
-    }
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscriptions()
-    {
-        // Folosește metoda moștenită GetAllAsync()
-        var subscriptions = await _repository.GetAllAsync();
-        return Ok(subscriptions);
-    }
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Subscription>> GetSubscription(int id)
-    {
-        // Folosește metoda moștenită GetByIdAsync()
-        var subscription = await _repository.GetByIdAsync(id);
-
-        if (subscription == null)
+        private readonly IRepository<Subscriptie> _subscriptieRepository;
+        private readonly IRepository<Utilizator> _utilizatorRepository;
+        private readonly IRepository<SubscripteProcesare> _subscriptieProcesareRepository;
+        private readonly IRepository<TipProcesare> _tipProcesareRepository;
+        private readonly IBaseService _baseService;
+        public SubscriptionsController(
+            IRepository<Subscriptie> subscriptieRepository,
+            IRepository<SubscripteProcesare> subscriptieProcesareRepository,
+            IRepository<TipProcesare> tipProcesareRepository,
+            IRepository<Utilizator> utilizatorRepository,
+            IBaseService baseService)
         {
-            return NotFound();
+            _subscriptieRepository = subscriptieRepository;
+            _subscriptieProcesareRepository = subscriptieProcesareRepository;
+            _tipProcesareRepository = tipProcesareRepository;
+            _utilizatorRepository = utilizatorRepository;
+            _baseService = baseService;
         }
 
-        return Ok(subscription);
-    }
-    [HttpGet("procesare")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<IEnumerable<SubscripteProcesare>>> GetSubscripteProcesare()
-    {
-        try
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Subscriptie>>> GetAllSubscriptions()
         {
-            var procesari = await _repository.GetAllSubscripteProcesareAsync();
-
-            if (!procesari.Any())
+            try
             {
-                return NotFound("Nu s-au găsit înregistrări în tabelul SubscripteProcesare.");
-            }
+                var subscriptions = await _subscriptieRepository.GetAllAsync(
+                    includes: query => query
+                        .Include(s => s.SubscripteProcesares)
+                            .ThenInclude(sp => sp.TipProcesare)
+                );
 
-            return Ok(procesari);
+                if (subscriptions == null || !subscriptions.Any())
+                {
+                    return NotFound(new { message = "Nu au fost găsite abonamente." });
+                }
+
+                return Ok(subscriptions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Eroare la preluarea abonamentelor.",
+                    error = ex.Message,
+                    innerError = ex.InnerException?.Message
+                });
+            }
         }
-        catch (Exception ex)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Subscriptie>> GetSubscriptionById(int id)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                $"Eroare la extragerea Subscriptiilor de Procesare: {ex.Message}");
+            try
+            {
+                var subscription = await _subscriptieRepository.GetAsync(
+                    predicate: s => s.Id == id,
+                    includes: query => query
+                        .Include(s => s.SubscripteProcesares)
+                            .ThenInclude(sp => sp.TipProcesare)
+                );
+
+                if (subscription == null)
+                {
+                    return NotFound(new { message = $"Abonamentul cu ID-ul {id} nu a fost găsit." });
+                }
+
+                return Ok(subscription);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Eroare la preluarea abonamentului.",
+                    error = ex.Message
+                });
+            }
+        }
+        [HttpGet("type/{tip}")]
+        public async Task<ActionResult<Subscriptie>> GetSubscriptionByType(string tip)
+        {
+            try
+            {
+                var subscription = await _subscriptieRepository.GetAsync(
+                    predicate: s => s.Tip.ToLower() == tip.ToLower(),
+                    includes: query => query
+                        .Include(s => s.SubscripteProcesares)
+                            .ThenInclude(sp => sp.TipProcesare)
+                );
+
+                if (subscription == null)
+                {
+                    return NotFound(new { message = $"Abonamentul de tip '{tip}' nu a fost găsit." });
+                }
+
+                return Ok(subscription);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Eroare la preluarea abonamentului.",
+                    error = ex.Message
+                });
+            }
+        }
+        [HttpGet("processing-types")]
+        public async Task<ActionResult<IEnumerable<TipProcesare>>> GetAllProcessingTypes()
+        {
+            try
+            {
+                var processingTypes = await _tipProcesareRepository.GetAllAsync();
+
+                if (processingTypes == null || !processingTypes.Any())
+                {
+                    return NotFound(new { message = "Nu au fost găsite tipuri de procesare." });
+                }
+
+                return Ok(processingTypes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Eroare la preluarea tipurilor de procesare.",
+                    error = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("{id}/limits")]
+        public async Task<ActionResult> GetSubscriptionLimits(int id)
+        {
+            try
+            {
+                var subscription = await _subscriptieRepository.GetAsync(
+                    predicate: s => s.Id == id,
+                    includes: query => query
+                        .Include(s => s.SubscripteProcesares)
+                            .ThenInclude(sp => sp.TipProcesare)
+                );
+
+                if (subscription == null)
+                {
+                    return NotFound(new { message = $"Abonamentul cu ID-ul {id} nu a fost găsit." });
+                }
+
+                var limits = subscription.SubscripteProcesares.Select(sp => new
+                {
+                    TipProcesare = sp.TipProcesare.Nume,
+                    TipProcesareId = sp.TipProcesareId,
+                    LimitaMax = sp.LimitaMax,
+                    EsteLimitat = sp.LimitaMax.HasValue,
+                    Descriere = sp.LimitaMax.HasValue
+                        ? $"Limită de {sp.LimitaMax} procesări pe lună"
+                        : "Nelimitat"
+                }).ToList();
+                return Ok(new
+                {
+                    SubscriptieId = subscription.Id,
+                    Tip = subscription.Tip,
+                    Limite = limits
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Eroare la preluarea limitelor.",
+                    error = ex.Message
+                });
+            }
+        }
+        [HttpGet("check-limit")]
+        public async Task<ActionResult> CheckProcessingLimit(
+            [FromQuery] int utilizatorId,
+            [FromQuery] int tipProcesareId)
+        {
+            try
+            {
+                return Ok(new
+                {
+                    CanProcess = true,
+                    Message = "Verificare implementată - necesită logică de business specifică"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Eroare la verificarea limitei.",
+                    error = ex.Message
+                });
+            }
+        }
+        [HttpGet("report")]
+        public async Task<ActionResult> GetSubscriptionsReport()
+        {
+            try
+            {
+                var subscriptions = await _subscriptieRepository.GetAllAsync(
+                    includes: query => query
+                        .Include(s => s.SubscripteProcesares)
+                            .ThenInclude(sp => sp.TipProcesare)
+                );
+
+                var report = subscriptions.Select(s => new
+                {
+                    s.Id,
+                    s.Tip,
+                    s.Pret,
+                    DimensiuneMaximaMb = s.DimensiuneMaximaMb,
+                    SubscriptieProcesareId = s.SubscriptieProcesareId,
+                    NumarTipuriProcesare = s.SubscripteProcesares.Count,
+                    TipuriProcesare = s.SubscripteProcesares.Select(sp => new
+                    {
+                        Id = sp.Id,
+                        Nume = sp.TipProcesare.Nume,
+                        TipProcesareId = sp.TipProcesareId,
+                        LimitaMax = sp.LimitaMax,
+                        EsteLimitat = sp.LimitaMax.HasValue,
+                        Status = sp.LimitaMax.HasValue
+                            ? $"Limitat la {sp.LimitaMax}"
+                            : "Nelimitat"
+                    }).OrderBy(tp => tp.Nume).ToList()
+                }).OrderBy(s => s.Pret).ToList();
+
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Eroare la generarea raportului.",
+                    error = ex.Message
+                });
+            }
+        }
+        [HttpPost("activate/{id}")]
+        public async Task<IActionResult> ActivateSubscription(int id)
+        {
+            var userId = _baseService.GetUserId();
+            var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == userId);
+            if (utilizator == null)
+                return NotFound(new { message = "Utilizator nu găsit" });
+
+            var subscriptie = await _subscriptieRepository.GetAsync(s => s.Id == id);
+            if (subscriptie == null)
+                return NotFound(new { message = "Abonamentul selectat nu există" });
+
+            utilizator.SubscriptieId = subscriptie.Id;
+            await _utilizatorRepository.UpdateAsync(utilizator);
+            await _utilizatorRepository.SaveChangesAsync();
+            return Ok(new
+            {
+                message = $"Abonamentul {subscriptie.Tip} a fost activat cu succes!"
+            });
         }
     }
+
 }

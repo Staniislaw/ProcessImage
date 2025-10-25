@@ -3,13 +3,10 @@
 using ProcessImage.Entities;
 namespace ProcessImage.repository.Interface
 {
-    public interface IAccesor : IRepository<Subscription>
+    public interface IAccesor //: IRepository<Subscription>
     {
-        Task<IEnumerable<Subscription>> GetSubscriptionsByUserIdAsync(int userId);
-        Task<IEnumerable<SubscripteProcesare>> GetAllSubscripteProcesareAsync();
-        Task<SubscripteProcesare?> GetSubscripteProcesareByIdAsync(int id);
+        /*     Task<IEnumerable<Subscription>> GetSubscriptionsByUserIdAsync(int userId);
+             Task<IEnumerable<SubscripteProcesare>> GetAllSubscripteProcesareAsync();
+             Task<SubscripteProcesare?> GetSubscripteProcesareByIdAsync(int id);*/
     }
-
-
-
 }

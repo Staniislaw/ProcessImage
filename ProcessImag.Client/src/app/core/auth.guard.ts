@@ -1,10 +1,41 @@
-import { CanActivateFn, Router } from '@angular/router';
+// guards/auth.guard.ts
+import { inject } from '@angular/core';
+import { Router, CanActivateFn } from '@angular/router';
+import { map, filter, take } from 'rxjs/operators';
+import { AuthService } from '../my-site/services/auth.service';
+export const authGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
-export function authGuard() {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return false; // sau true, depinde ce vrei în server-side
+  // ✅ Dacă suntem deja pe login sau register, nu redirecționăm
+  const publicPaths = ['/login', '/register'];
+  if (publicPaths.includes(state.url)) {
+    return true;
   }
 
-  const token = localStorage.getItem('token');
-  return !!token;
-}
+  if (!authService.loading()) {
+    if (authService.isAuthenticated()) {
+      return true;
+    } else {
+      router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+      return false;
+    }
+  }
+
+  return new Promise<boolean>((resolve) => {
+    const checkInterval = setInterval(() => {
+      if (!authService.loading()) {
+        clearInterval(checkInterval);
+        if (authService.isAuthenticated()) {
+          resolve(true);
+        } else {
+          // ❌ Nu redirecționa dacă suntem deja pe login/register
+          if (!publicPaths.includes(state.url)) {
+            router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+          }
+          resolve(false);
+        }
+      }
+    }, 50);
+  });
+};

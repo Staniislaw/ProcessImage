@@ -1,6 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-
+import { Component, OnInit } from '@angular/core';
+import { HomeService, Subscription } from './home.service';
+interface PlanConfig {
+  description: string;
+  gradient: string;
+  border: string;
+  buttonColor: string;
+  badgeColor: string;
+  icon: string;
+  popular?: boolean;
+}
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -8,25 +17,165 @@ import { Component } from '@angular/core';
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent {
-  features = [
-    {
-      title: 'Lightning Fast',
-      description: 'Experience blazing-fast performance with our optimized architecture',
-      content: 'Built with modern technologies to ensure the best user experience.',
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>'
+
+export class HomeComponent implements OnInit {
+  subscriptions: Subscription[] = [];
+  loading = true;
+  error = '';
+  selectedPlanId: number | null = null;
+
+  private apiUrl = 'https://localhost:7001/api/subscriptions';
+  planConfigs: { [key: string]: PlanConfig } = {
+    'Free': {
+      description: 'Perfect pentru început',
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      border: 'border-purple-400',
+      buttonColor: 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700',
+      badgeColor: 'bg-purple-100 text-purple-800',
+      icon: '🚀'
     },
-    {
-      title: 'Secure by Default',
-      description: 'Your data is protected with industry-standard security measures',
-      content: 'Enterprise-grade security to keep your information safe.',
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>'
+    'Premium': {
+      description: 'Pentru utilizatori avansați',
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      border: 'border-pink-400',
+      buttonColor: 'bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700',
+      badgeColor: 'bg-pink-100 text-pink-800',
+      icon: '⭐',
+      popular: true
     },
-    {
-      title: 'Beautiful Design',
-      description: 'Crafted with attention to detail for an exceptional user experience',
-      content: 'Clean, modern interface that adapts to your workflow.',
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.583a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>'
+    'Professional': {
+      description: 'Pentru profesioniști și echipe',
+      gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+      border: 'border-amber-400',
+      buttonColor: 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700',
+      badgeColor: 'bg-amber-100 text-amber-800',
+      icon: '👑'
     }
-  ];
+  };
+
+
+  constructor(private homeService: HomeService) { }
+
+  ngOnInit(): void {
+    this.loadSubscriptions();
+  }
+
+  loadSubscriptions(): void {
+    this.loading = true;
+    this.error = '';
+
+    this.homeService.getAllSubscriptions().subscribe({
+      next: (data) => {
+        this.subscriptions = data;
+        this.loading = false;
+        console.log('Abonamente încărcate:', data);
+      },
+      error: (err) => {
+        this.error = 'Eroare la încărcarea abonamentelor. Vă rugăm încercați din nou.';
+        this.loading = false;
+        console.error('Eroare API:', err);
+      }
+    });
+  }
+
+
+
+
+  getPlanConfig(tip: string): PlanConfig {
+    return this.planConfigs[tip] || this.planConfigs['Free'];
+  }
+
+  getFeatures(subscription: Subscription): string[] {
+    const features: string[] = [];
+
+    // Adaugă stocare
+    features.push(`${this.formatStorage(subscription.dimensiuneMaximaMb)} stocare maximă`);
+
+    // Adaugă tipurile de procesare cu limitele lor
+    if (subscription.subscripteProcesares && subscription.subscripteProcesares.length > 0) {
+      // Sortează după ID-ul tipului de procesare pentru a fi consistent
+      const sortedProcessing = [...subscription.subscripteProcesares].sort(
+        (a, b) => a.tipProcesare.id - b.tipProcesare.id
+      );
+
+      sortedProcessing.forEach(sp => {
+        if (sp.limitaMax === null) {
+          features.push(`✓ ${sp.tipProcesare.nume} - Nelimitat`);
+        } else {
+          features.push(`✓ ${sp.tipProcesare.nume} - ${sp.limitaMax}/zi`);
+        }
+      });
+    }
+
+    // Adaugă features generale bazate pe tip
+    if (subscription.tip === 'Free') {
+      features.push('Suport comunitate');
+    } else if (subscription.tip === 'Premium') {
+      features.push('Suport prioritar 24/7');
+      features.push('Procesare mai rapidă');
+    } else if (subscription.tip === 'Professional') {
+      features.push('Suport dedicat 24/7');
+      features.push('Procesare prioritară');
+      features.push('API acces complet');
+    }
+
+    return features;
+  }
+  getProcessingSummary(subscription: Subscription): string {
+    if (!subscription.subscripteProcesares || subscription.subscripteProcesares.length === 0) {
+      return 'Fără opțiuni de procesare';
+    }
+
+    const unlimited = subscription.subscripteProcesares.filter(sp => sp.limitaMax === null).length;
+    const limited = subscription.subscripteProcesares.filter(sp => sp.limitaMax !== null).length;
+
+    if (unlimited === subscription.subscripteProcesares.length) {
+      return `${unlimited} tipuri de procesare nelimitate`;
+    } else if (limited === subscription.subscripteProcesares.length) {
+      return `${limited} tipuri de procesare cu limită zilnică`;
+    } else {
+      return `${unlimited} nelimitate + ${limited} cu limită`;
+    }
+  }
+  hasUnlimitedProcessing(subscription: Subscription): boolean {
+    if (!subscription.subscripteProcesares || subscription.subscripteProcesares.length === 0) {
+      return false;
+    }
+    return subscription.subscripteProcesares.every(sp => sp.limitaMax === null);
+  }
+
+
+  selectPlan(subscription: Subscription): void {
+    this.selectedPlanId = subscription.id;
+    this.homeService.activateSubscription(subscription.id).subscribe({
+      next: (response) => {
+        alert(response.message);
+        this.selectedPlanId = null;
+      },
+      error: (err) => {
+        alert('Eroare la activarea abonamentului. Vă rugăm încercați din nou.');
+        this.selectedPlanId = null;
+      }
+    });
+  }
+
+
+  isPopular(tip: string): boolean {
+    return this.planConfigs[tip]?.popular || false;
+  }
+
+  formatPrice(price: number): string {
+    return price.toFixed(2);
+  }
+
+  formatStorage(mb: number): string {
+    if (mb >= 1000) {
+      return `${(mb / 1000).toFixed(1)} GB`;
+    }
+    return `${mb} MB`;
+  }
+
+  getProcessingCount(subscription: Subscription): number {
+    return subscription.subscripteProcesares?.length || 0;
+  }
 }

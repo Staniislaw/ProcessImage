@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ProcessImage.Domain;
+
+using System;
 using System.Collections.Generic;
 
 namespace ProcessImage.Entities;
@@ -11,7 +13,7 @@ public partial class SubscripteProcesare
 
     public long TipProcesareId { get; set; }
 
-    public long? LimitaMax { get; set; }
+    public int? LimitaMax { get; set; }
 
     public virtual Subscriptie Subscriptie { get; set; } = null!;
 

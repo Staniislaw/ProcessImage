@@ -1,68 +1,67 @@
-import { Component, HostListener, Input, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-login-modal',
+  selector: 'app-login-page',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black/50 z-40"></div>
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 px-4">
+      <div class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-md border border-gray-100">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Bine ai revenit 👋</h2>
 
-    <!-- Modal -->
-    <div class="fixed inset-0 flex items-center justify-center z-50">
-      <div id="modal" class="bg-white rounded shadow-lg p-6 w-full max-w-sm relative">
-        <h2 class="text-xl font-semibold mb-4 text-center">Autentificare</h2>
-        <form (ngSubmit)="login()" class="flex flex-col gap-3">
-          <input [(ngModel)]="email" name="email" type="email" placeholder="Email" required
-                 class="border p-2 rounded focus:outline-none focus:ring focus:ring-blue-300">
-          <input [(ngModel)]="parola" name="parola" type="password" placeholder="Parolă" required
-                 class="border p-2 rounded focus:outline-none focus:ring focus:ring-blue-300">
-          <button type="submit"
-                  class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">
-            Login
+        <form (ngSubmit)="login()" class="flex flex-col gap-4">
+          <input 
+            [(ngModel)]="email" name="email" type="email" placeholder="Email" required
+            class="border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+
+          <input 
+            [(ngModel)]="parola" name="parola" type="password" placeholder="Parolă" required
+            class="border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+
+          <button 
+            type="submit"
+            class="bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+            Autentificare
           </button>
-          <p *ngIf="eroare" class="text-red-500 text-sm mt-1">{{ eroare }}</p>
+
+          <p *ngIf="eroare" class="text-red-500 text-center text-sm mt-2">{{ eroare }}</p>
         </form>
-        <button (click)="close()" 
-                class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
+
+        <p class="text-center text-sm text-gray-600 mt-6">
+          Nu ai cont?
+          <button (click)="goToRegisterPage()"
+            class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+            Înregistrează-te
+          </button>
+        </p>
       </div>
     </div>
   `
 })
-export class LoginModalComponent {
-  authService = inject(AuthService);
-
+export class LoginPageComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  
   email = '';
   parola = '';
   eroare = '';
-
-  // ✅ Decorăm ca Input pentru a primi callback
-  @Input() onClose: (() => void) | null = null;
 
   login() {
     this.authService.login({ email: this.email, parola: this.parola }).subscribe({
       next: () => {
         this.eroare = '';
-        this.close();
+        this.router.navigate(['/']); // după autentificare mergem la home
       },
       error: err => {
         this.eroare = err.error?.message ?? 'Eroare la autentificare';
       }
     });
   }
-
-  close() {
-    if (this.onClose) this.onClose();
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    const modalEl = document.getElementById('modal');
-    if (modalEl && !modalEl.contains(event.target as Node)) {
-      this.close();
-    }
+  goToRegisterPage() {
+    this.router.navigate(['/register']);
   }
 }

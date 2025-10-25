@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using ProcessImage.Entities;
 
+using System;
 using System.Reflection;
 
 namespace ProcessImage.Infrastructure
@@ -18,10 +19,21 @@ namespace ProcessImage.Infrastructure
                     connectionString,
                     b => b.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name)
                 ));
+            bool useLazyLoading = configuration.GetValue<bool>("DatabaseSettings:UseLazyLoading");
+            services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 
-            services.AddDbContext<PpawLab02Context>(options =>
+                if (useLazyLoading)
+                {
+                    options.UseLazyLoadingProxies(); // activează Lazy Loading
+                }
+                // dacă false → nu activăm proxy-uri, deci Eager Loading
+            });
+
+            /*services.AddDbContext<PpawContext>(options =>
                 options.UseSqlServer(connectionString)
-            );
+            );*/
 
 
         }

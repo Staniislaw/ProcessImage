@@ -1,11 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Configuration;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Data.SDK.Repository
 {
@@ -14,47 +10,87 @@ namespace Data.SDK.Repository
         where U : DbContext
     {
         private readonly U _context;
-        // Proprietățile tale existente
+        private readonly bool _useLazyLoading;
+
         public Expression<Func<T, bool>> WhereFilter { get; set; }
 
-        public BaseRepository(U context)
+        public BaseRepository(U context, IConfiguration configuration)
         {
             _context = context;
+            _useLazyLoading = configuration.GetValue<bool>("DatabaseSettings:UseLazyLoading");
         }
 
-        // IMPLEMENTARE PROPRIETĂȚI IRepository
         public DbContext Context => _context;
-
-        public IQueryable<T> Query =>
-            _context.Set<T>().AsQueryable();
-
-        // Nu este necesară expunerea DbSet, dar o păstrăm pentru coerență
+        public IQueryable<T> Query => _context.Set<T>().AsQueryable();
         public DbSet<T> Set => _context.Set<T>();
 
-        // --- IMPLEMENTARE METODE IRepository ---
-
-        // CREATE (Adaugă entitatea în memorie)
-        public async Task AddAsync(T entity)
+        public async Task<T> AddAsync(T entity)
         {
             await _context.Set<T>().AddAsync(entity);
-            // Salvarea va fi apelată separat (sau adăugată aici, de ex. await SaveChangesAsync();)
+            await SaveChangesAsync();
+            return entity;
         }
-
-        // READ (Găsește după ID)
         public async Task<T?> GetByIdAsync(int id)
         {
-            // Metoda FindAsync este optimizată pentru căutarea după cheia primară
             return await _context.Set<T>().FindAsync(id);
         }
-
-        // READ (Extrage toate elementele)
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<T?> GetByIdAsync(long id)
         {
-            // Folosește AsNoTracking() dacă nu ai nevoie să modifici entitățile
-            return await _context.Set<T>().AsNoTracking().ToListAsync();
+            return await _context.Set<T>().FindAsync(id);
+        }
+        public async Task<IList<T>> GetWhereIncludeAsync(Expression<Func<T, bool>> match, bool asNoTracking = true, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = asNoTracking ? _context.Set<T>().AsNoTracking() : _context.Set<T>();
+            query = query.Where(match);
+            if (!_useLazyLoading && includes != null && includes.Length > 0)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+
+            return await query.ToListAsync();
+        }
+        public async Task<T?> GetSingleWhereIncludeAsync(Expression<Func<T, bool>> match, bool asNoTracking = true, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = asNoTracking ? _context.Set<T>().AsNoTracking() : _context.Set<T>();
+            query = query.Where(match);
+            if (!_useLazyLoading && includes != null && includes.Length > 0)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+            return await query.FirstOrDefaultAsync();
         }
 
-        // READ (Extrage elemente pe baza unui predicat)
+        public async Task<T?> GetAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>()
+                                 .AsNoTracking()
+                                 .FirstOrDefaultAsync(predicate);
+        }
+        public async Task<T?> GetAsync(
+            Expression<Func<T, bool>> predicate,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null)
+        {
+            IQueryable<T> query = _context.Set<T>().AsNoTracking();
+            if (!_useLazyLoading && includes != null)
+            {
+                query = includes(query);
+            }
+            return await query.FirstOrDefaultAsync(predicate);
+        }
+        public async Task<IEnumerable<T>> GetAllAsync()
+        {
+            return await _context.Set<T>().AsNoTracking().ToListAsync();
+        }
+        public async Task<IEnumerable<T>> GetAllAsync(
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null)
+        {
+            IQueryable<T> query = _context.Set<T>().AsNoTracking();
+            if (!_useLazyLoading && includes != null)
+            {
+                query = includes(query);
+            }
+            return await query.ToListAsync();
+        }
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
             return await _context.Set<T>()
@@ -62,25 +98,30 @@ namespace Data.SDK.Repository
                                  .Where(predicate)
                                  .ToListAsync();
         }
-
-        // UPDATE (Marchează entitatea ca modificată)
-        public void Update(T entity)
+        public async Task<IEnumerable<T>> FindAsync(
+            Expression<Func<T, bool>> predicate,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null)
+        {
+            IQueryable<T> query = _context.Set<T>().AsNoTracking();
+            if (!_useLazyLoading && includes != null)
+            {
+                query = includes(query);
+            }
+            return await query.Where(predicate).ToListAsync();
+        }
+        public async Task UpdateAsync(T entity)
         {
             _context.Set<T>().Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
+            await SaveChangesAsync();
         }
-
-        // DELETE (Marchează entitatea pentru ștergere)
         public void Remove(T entity)
         {
             _context.Set<T>().Remove(entity);
         }
-
-        // Salvarea modificărilor, necesară pentru a aplica toate operațiile CRUD
         public async Task<int> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync();
         }
     }
-
 }

@@ -1,4 +1,4 @@
-﻿using Data.SDK.Repository;
+﻿/*using Data.SDK.Repository;
 using Microsoft.EntityFrameworkCore;
 
 using ProcessImage.Entities;
@@ -6,9 +6,9 @@ using ProcessImage.repository.Interface;
 
 namespace ProcessImage.repository
 {
-    public class Accesor : BaseRepository<Subscription, PpawLab02Context>, IAccesor
+    public class Accesor : BaseRepository<Subscription, PpawContext>, IAccesor
     {
-        public Accesor(PpawLab02Context context) : base(context)
+        public Accesor(PpawContext context) : base(context)
         {
         }
         public async Task<IEnumerable<Subscription>> GetSubscriptionsByUserIdAsync(int userId)
@@ -29,4 +29,4 @@ namespace ProcessImage.repository
 
 
     }
-}
+}*/
