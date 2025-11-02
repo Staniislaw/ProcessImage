@@ -2,12 +2,21 @@ import { Component, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ImageProcessingService } from './process-iamge.service';
+import { Observable } from 'rxjs';
+import { CropSelectorComponent } from './crop-selector/crop-selector/crop-selector.component';
 
 interface ProcessingType {
   id: number;
   nume: string;
   icon?: string;
   description?: string;
+}
+interface CropArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 interface ProcessingConfig {
@@ -38,7 +47,7 @@ interface CustomField {
 @Component({
   selector: 'app-image-processing',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CropSelectorComponent],
   templateUrl: './process-image.component.html',
   styleUrl: './process-image.component.css'
 })
@@ -57,6 +66,16 @@ export class ProcessImageComponent implements OnInit {
 
   // Custom field values
   customFieldValues: { [key: string]: any } = {};
+
+  //CROP SETTINGS
+  isCropMode: boolean = false;
+  cropCanvas!: HTMLCanvasElement;
+  cropCtx!: CanvasRenderingContext2D;
+  cropStartX: number = 0;
+  cropStartY: number = 0;
+  isDrawingCrop: boolean = false;
+  tempCropArea: CropArea | null = null;
+  @ViewChild('cropSelectorRef') cropSelector?: CropSelectorComponent;
 
   // Mappings pentru icoane și descrieri
   private typeConfig: { [key: string]: { icon: string; description: string; config: Partial<ProcessingConfig> } } = {
@@ -180,7 +199,7 @@ export class ProcessImageComponent implements OnInit {
     customFields: []
   };
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private imageService: ImageProcessingService) { }
 
   ngOnInit(): void {
     this.loadProcessingTypes();
@@ -188,7 +207,7 @@ export class ProcessImageComponent implements OnInit {
 
   loadProcessingTypes(): void {
     this.isLoadingTypes = true;
-    
+
     // Înlocuiește cu URL-ul tău de backend
     this.http.get<ProcessingType[]>('YOUR_BACKEND_URL/api/processing-types')
       .subscribe({
@@ -307,7 +326,7 @@ export class ProcessImageComponent implements OnInit {
     img.onload = () => {
       const canvas = this.canvas.nativeElement;
       const ctx = canvas.getContext('2d')!;
-      
+
       // Reset canvas
       canvas.width = img.width;
       canvas.height = img.height;
@@ -358,7 +377,7 @@ export class ProcessImageComponent implements OnInit {
     const y = this.customFieldValues['y'] || 0;
     const width = this.customFieldValues['width'] || 300;
     const height = this.customFieldValues['height'] || 300;
-    
+
     const canvas = ctx.canvas;
     canvas.width = width;
     canvas.height = height;
@@ -403,13 +422,13 @@ export class ProcessImageComponent implements OnInit {
   applyRotate(ctx: CanvasRenderingContext2D, img: HTMLImageElement): void {
     const canvas = ctx.canvas;
     const angle = (this.filterValue * Math.PI) / 180;
-    
+
     // Adjust canvas size for rotation
     const sin = Math.abs(Math.sin(angle));
     const cos = Math.abs(Math.cos(angle));
     canvas.width = img.width * cos + img.height * sin;
     canvas.height = img.width * sin + img.height * cos;
-    
+
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(angle);
     ctx.drawImage(img, -img.width / 2, -img.height / 2);
@@ -417,24 +436,24 @@ export class ProcessImageComponent implements OnInit {
 
   applyWatermark(ctx: CanvasRenderingContext2D, img: HTMLImageElement): void {
     ctx.drawImage(img, 0, 0);
-    
+
     const text = this.customFieldValues['text'] || 'Watermark';
     const fontSize = this.customFieldValues['fontSize'] || 48;
     const color = this.customFieldValues['color'] || '#ffffff';
     const opacity = (this.customFieldValues['opacity'] || 50) / 100;
     const position = this.customFieldValues['position'] || 'Dreapta Jos';
-    
+
     ctx.font = `bold ${fontSize}px Arial`;
     ctx.fillStyle = color;
     ctx.globalAlpha = opacity;
-    
+
     const textMetrics = ctx.measureText(text);
     const textWidth = textMetrics.width;
     const textHeight = fontSize;
-    
+
     let x = 0, y = 0;
     const padding = 20;
-    
+
     switch (position) {
       case 'Stânga Sus':
         x = padding;
@@ -465,7 +484,7 @@ export class ProcessImageComponent implements OnInit {
         y = ctx.canvas.height - padding;
         break;
     }
-    
+
     ctx.fillText(text, x, y);
     ctx.globalAlpha = 1;
   }
@@ -498,7 +517,24 @@ export class ProcessImageComponent implements OnInit {
     this.filterValue = config.default;
     this.processedImage = '';
     this.initializeCustomFields();
+
+    this.isCropMode = config.type === 'crop';
+
+    if (this.isCropMode && this.originalImage) {
+      console.log('Entering crop mode with image:', this.originalImage.substring(0, 50));
+      // Folosim un timeout mai lung pentru a ne asigura că componenta este renderizată
+      setTimeout(() => {
+        if (this.cropSelector) {
+          console.log('CropSelector found, loading image...');
+          this.cropSelector.loadImage(this.originalImage);
+        } else {
+          console.error('CropSelector not found!');
+        }
+      }, 200);
+    }
   }
+
+
 
   initializeCustomFields(): void {
     this.customFieldValues = {};
@@ -524,4 +560,96 @@ export class ProcessImageComponent implements OnInit {
       this.showToast = false;
     }, 3000);
   }
+  processImageBackend(): void {
+    if (!this.fileInput.nativeElement.files?.length || !this.selectedConfig) return;
+    const file = this.fileInput.nativeElement.files[0];
+    this.isProcessing = true;
+
+    const type = this.selectedConfig.type;
+    let request$: Observable<Blob>;
+
+    switch (type) {
+      case 'resize':
+        request$ = this.imageService.processResize(file, this.filterValue);
+        break;
+
+      case 'crop':
+        request$ = this.imageService.processCrop(
+          file,
+          this.customFieldValues['x'] || 0,
+          this.customFieldValues['y'] || 0,
+          this.customFieldValues['width'] || 300,
+          this.customFieldValues['height'] || 300
+        );
+        break;
+
+      case 'filter':
+        request$ = this.imageService.processFilter(
+          file,
+          (this.customFieldValues['filterType'] || 'Grayscale').toLowerCase(),
+          this.filterValue
+        );
+        break;
+
+      case 'compress':
+        request$ = this.imageService.processCompress(file, this.filterValue);
+        break;
+
+      case 'rotate':
+        request$ = this.imageService.processRotate(file, this.filterValue);
+        break;
+
+      case 'watermark':
+        // Mapare pentru pozițiile din română în engleză
+        const positionMap: { [key: string]: string } = {
+          'Stânga Sus': 'TopLeft',
+          'Centru Sus': 'TopCenter',
+          'Dreapta Sus': 'TopRight',
+          'Centru': 'Center',
+          'Stânga Jos': 'BottomLeft',
+          'Centru Jos': 'BottomCenter',
+          'Dreapta Jos': 'BottomRight'
+        };
+
+        const romanianPosition = this.customFieldValues['position'] || 'Dreapta Jos';
+        const englishPosition = positionMap[romanianPosition] || 'BottomRight';
+
+        request$ = this.imageService.processWatermark(
+          file,
+          this.customFieldValues['text'] || 'Watermark',
+          this.customFieldValues['fontSize'] || 48,
+          this.customFieldValues['color'] || '#ffffff',
+          englishPosition,
+          this.customFieldValues['opacity'] || 50
+        );
+        break;
+
+      default:
+        this.showToastMessage('Tip de procesare necunoscut', 'error');
+        this.isProcessing = false;
+        return;
+    }
+
+    request$.subscribe({
+      next: (blob) => {
+        this.processedImage = URL.createObjectURL(blob);
+        this.isProcessing = false;
+        this.showToastMessage('Imagine procesată cu succes!', 'success');
+      },
+      error: (err) => {
+        console.error('Eroare la procesarea imaginii:', err);
+        this.isProcessing = false;
+        this.showToastMessage('Eroare la procesare imagine', 'error');
+      }
+    });
+  }
+
+  onCropAreaSelected(cropArea: CropArea) {
+    this.customFieldValues['x'] = cropArea.x;
+    this.customFieldValues['y'] = cropArea.y;
+    this.customFieldValues['width'] = cropArea.width;
+    this.customFieldValues['height'] = cropArea.height;
+    console.log('Crop area selected:', cropArea);
+  }
+
 }

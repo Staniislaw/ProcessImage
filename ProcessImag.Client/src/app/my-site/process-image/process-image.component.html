@@ -27,22 +27,10 @@
         <p class="card-description">Trage și plasează sau click pentru a selecta o imagine</p>
       </div>
       <div class="card-content">
-        <div 
-          class="upload-area"
-          [class.dragging]="isDragging"
-          (dragover)="onDragOver($event)"
-          (dragleave)="onDragLeave()"
-          (drop)="onDrop($event)"
-          (click)="openFileDialog()"
-        >
-          <input
-            #fileInput
-            type="file"
-            accept="image/*"
-            (change)="onFileInputChange($event)"
-            style="display: none"
-          />
-          
+        <div class="upload-area" [class.dragging]="isDragging" (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()" (drop)="onDrop($event)" (click)="openFileDialog()">
+          <input #fileInput type="file" accept="image/*" (change)="onFileInputChange($event)" style="display: none" />
+
           <div *ngIf="originalImage; else placeholder" class="image-preview">
             <img [src]="originalImage" alt="Originală" class="preview-img" />
             <p class="preview-text">Click pentru a schimba imaginea</p>
@@ -76,23 +64,15 @@
         <!-- Processing Tabs -->
         <div class="tabs">
           <div class="tab-row" *ngIf="firstRowConfigs.length > 0">
-            <button
-              *ngFor="let config of firstRowConfigs"
-              class="tab-button"
-              [class.active]="selectedConfig.id === config.id"
-              (click)="selectConfig(config)"
-            >
+            <button *ngFor="let config of firstRowConfigs" class="tab-button"
+              [class.active]="selectedConfig.id === config.id" (click)="selectConfig(config)">
               <span class="material-icons">{{ config.icon }}</span>
               <span class="tab-label">{{ config.label }}</span>
             </button>
           </div>
           <div class="tab-row" *ngIf="secondRowConfigs.length > 0">
-            <button
-              *ngFor="let config of secondRowConfigs"
-              class="tab-button"
-              [class.active]="selectedConfig.id === config.id"
-              (click)="selectConfig(config)"
-            >
+            <button *ngFor="let config of secondRowConfigs" class="tab-button"
+              [class.active]="selectedConfig.id === config.id" (click)="selectConfig(config)">
               <span class="material-icons">{{ config.icon }}</span>
               <span class="tab-label">{{ config.label }}</span>
             </button>
@@ -114,18 +94,20 @@
             <label>Intensitate</label>
             <span class="slider-value">{{ filterValue }}{{ selectedConfig.unit }}</span>
           </div>
-          <input
-            type="range"
-            class="slider"
-            [min]="selectedConfig.min"
-            [max]="selectedConfig.max"
-            [(ngModel)]="filterValue"
-            step="1"
-          />
+          <input type="range" class="slider" [min]="selectedConfig.min" [max]="selectedConfig.max"
+            [(ngModel)]="filterValue" step="1" />
         </div>
 
-        <!-- Custom Fields -->
-        <div class="custom-fields" *ngIf="selectedConfig.customFields && selectedConfig.customFields.length > 0">
+        <!-- ============= CROP VISUAL SELECTOR ============= -->
+        <!-- CROP VISUAL SELECTOR -->
+        <!-- ============= CROP VISUAL SELECTOR ============= -->
+        <div *ngIf="isCropMode && originalImage" class="crop-mode-container">
+          <p style="margin-bottom: 10px; color: #666;">Trage cu mouse-ul pentru a selecta zona de decupare</p>
+          <app-crop-selector #cropSelectorRef (cropSelected)="onCropAreaSelected($event)"></app-crop-selector>
+        </div>
+        <!-- ============= CUSTOM FIELDS (pentru alte tipuri) ============= -->
+        <div class="custom-fields"
+          *ngIf="selectedConfig.customFields && selectedConfig.customFields.length > 0 && !isCropMode">
           <div class="custom-field" *ngFor="let field of selectedConfig.customFields">
             <!-- Text Input -->
             <div class="input-group" *ngIf="field.type === 'text'">
@@ -133,12 +115,8 @@
                 <span class="material-icons input-icon">text_fields</span>
                 {{ field.label }}
               </label>
-              <input
-                type="text"
-                class="text-input"
-                [placeholder]="field.placeholder || ''"
-                [(ngModel)]="customFieldValues[field.name]"
-              />
+              <input type="text" class="text-input" [placeholder]="field.placeholder || ''"
+                [(ngModel)]="customFieldValues[field.name]" />
             </div>
 
             <!-- Number Input -->
@@ -147,13 +125,8 @@
                 <span class="material-icons input-icon">tag</span>
                 {{ field.label }}
               </label>
-              <input
-                type="number"
-                class="text-input"
-                [min]="field.min"
-                [max]="field.max"
-                [(ngModel)]="customFieldValues[field.name]"
-              />
+              <input type="number" class="text-input" [min]="field.min" [max]="field.max"
+                [(ngModel)]="customFieldValues[field.name]" />
             </div>
 
             <!-- Color Picker -->
@@ -163,11 +136,7 @@
                 {{ field.label }}
               </label>
               <div class="color-picker-wrapper">
-                <input
-                  type="color"
-                  class="color-input"
-                  [(ngModel)]="customFieldValues[field.name]"
-                />
+                <input type="color" class="color-input" [(ngModel)]="customFieldValues[field.name]" />
                 <span class="color-value">{{ customFieldValues[field.name] }}</span>
               </div>
             </div>
@@ -178,10 +147,7 @@
                 <span class="material-icons input-icon">list</span>
                 {{ field.label }}
               </label>
-              <select
-                class="select-input"
-                [(ngModel)]="customFieldValues[field.name]"
-              >
+              <select class="select-input" [(ngModel)]="customFieldValues[field.name]">
                 <option *ngFor="let option of field.options" [value]="option">
                   {{ option }}
                 </option>
@@ -192,19 +158,15 @@
 
         <!-- Action Buttons -->
         <div class="button-group">
-          <button
-            class="btn btn-primary"
-            [disabled]="!originalImage || isProcessing"
-            (click)="processImage()"
-          >
+          <button class="btn btn-primary" [disabled]="!originalImage || isProcessing" (click)="processImage()">
             <span class="material-icons" [class.spinning]="isProcessing">auto_fix_high</span>
             {{ isProcessing ? 'Se procesează...' : 'Procesează Imaginea' }}
           </button>
-          <button
-            class="btn btn-outline btn-icon"
-            [disabled]="!originalImage"
-            (click)="resetImage()"
-          >
+          <button class="btn btn-secondary" [disabled]="!originalImage || isProcessing" (click)="processImageBackend()">
+            <span class="material-icons">cloud_upload</span>
+            Procesează cu Backend
+          </button>
+          <button class="btn btn-outline btn-icon" [disabled]="!originalImage" (click)="resetImage()">
             <span class="material-icons">refresh</span>
           </button>
         </div>
