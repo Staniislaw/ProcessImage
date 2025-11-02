@@ -38,43 +38,35 @@ export interface ChangePasswordRequest {
 export class AuthService {
   private apiUrl = environment.apiBaseUrl + '/Utilizator';
   tokenKey = 'jwt_token';
-
   private userSignal = signal<User | null>(null);
   private loadingSignal = signal<boolean>(true); 
-
   user = this.userSignal.asReadonly();
   loading = this.loadingSignal.asReadonly(); 
-
   constructor(private http: HttpClient) {
     this.initializeAuth();
   }
-
   private initializeAuth(): void {
-    const token = localStorage.getItem(this.tokenKey);
-    if (token) {
-      console.log('✅ Token găsit, încarc profilul...');
-      this.loadProfile().subscribe({
-        next: () => {
-          console.log('✅ Profil încărcat cu succes');
-          this.loadingSignal.set(false);
-        },
-        error: (err) => {
-          console.error('❌ Eroare la încărcarea profilului:', err);
-          this.signOut();
-          this.loadingSignal.set(false);
-        }
-      });
-    } else {
-      console.log('⚠️ Nu există token salvat');
-      this.loadingSignal.set(false);
-    }
+  const token = localStorage.getItem(this.tokenKey);
+  if (token) {
+    this.loadProfile().subscribe({
+      next: (user) => {
+        this.loadingSignal.set(false);
+      },
+      error: (err) => {
+        this.signOut();
+        this.loadingSignal.set(false);
+      }
+    });
+  } else {
+    this.loadingSignal.set(false);
   }
+}
+
 
   login(request: { email: string; parola: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, request).pipe(
       tap((response: any) => {
         localStorage.setItem(this.tokenKey, response.token);
-        console.log('✅ Token salvat');
         this.userSignal.set({
           id: response.utilizator.id,
           name: response.utilizator.nume,

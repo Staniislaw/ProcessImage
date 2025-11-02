@@ -101,7 +101,6 @@ namespace ProcessImage.Controllers
 
         // UtilizatorController.cs (sau AuthController.cs)
         [HttpGet("profil")]
-        [Authorize]
         public async Task<IActionResult> GetProfil()
         {
             var userId = _baseService.GetUserId(); 
@@ -120,7 +119,6 @@ namespace ProcessImage.Controllers
         }
 
         [HttpPut("update-profil")]
-        [Authorize]
         public async Task<IActionResult> UpdateProfil([FromBody] UpdateProfilRequest request)
         {
             if (!ModelState.IsValid)

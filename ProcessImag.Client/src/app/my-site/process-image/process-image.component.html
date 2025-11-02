@@ -6,8 +6,14 @@
 
   <!-- Header -->
   <div class="header">
-    <h1>Image Processing</h1>
-    <p class="subtitle">Upload an image, apply filters, and download the result</p>
+    <h1>Procesare Imagini</h1>
+    <p class="subtitle">Încarcă o imagine, aplică efecte și descarcă rezultatul</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoadingTypes" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Se încarcă tipurile de procesare...</p>
   </div>
 
   <div class="grid">
@@ -16,9 +22,9 @@
       <div class="card-header">
         <h2 class="card-title">
           <span class="material-icons">upload</span>
-          Upload Image
+          Încarcă Imagine
         </h2>
-        <p class="card-description">Drag and drop or click to select an image</p>
+        <p class="card-description">Trage și plasează sau click pentru a selecta o imagine</p>
       </div>
       <div class="card-content">
         <div 
@@ -38,8 +44,8 @@
           />
           
           <div *ngIf="originalImage; else placeholder" class="image-preview">
-            <img [src]="originalImage" alt="Original" class="preview-img" />
-            <p class="preview-text">Click to change image</p>
+            <img [src]="originalImage" alt="Originală" class="preview-img" />
+            <p class="preview-text">Click pentru a schimba imaginea</p>
           </div>
 
           <ng-template #placeholder>
@@ -48,8 +54,8 @@
                 <span class="material-icons icon-large">image</span>
               </div>
               <div class="placeholder-text">
-                <p class="upload-title">{{ isDragging ? 'Drop image here' : 'Upload an image' }}</p>
-                <p class="upload-subtitle">Supports JPG, PNG, GIF, WEBP</p>
+                <p class="upload-title">{{ isDragging ? 'Plasează imaginea aici' : 'Încarcă o imagine' }}</p>
+                <p class="upload-subtitle">Suportă JPG, PNG, GIF, WEBP</p>
               </div>
             </div>
           </ng-template>
@@ -57,65 +63,131 @@
       </div>
     </div>
 
-    <!-- Filter Selection Card -->
+    <!-- Processing Selection Card -->
     <div class="card">
       <div class="card-header">
         <h2 class="card-title">
           <span class="material-icons">auto_fix_high</span>
-          Select Filter
+          Selectează Procesare
         </h2>
-        <p class="card-description">Choose and customize your filter</p>
+        <p class="card-description">Alege și personalizează tipul de procesare</p>
       </div>
       <div class="card-content filter-content">
-        <!-- Filter Tabs -->
+        <!-- Processing Tabs -->
         <div class="tabs">
-          <div class="tab-row">
+          <div class="tab-row" *ngIf="firstRowConfigs.length > 0">
             <button
-              *ngFor="let filter of firstRowFilters"
+              *ngFor="let config of firstRowConfigs"
               class="tab-button"
-              [class.active]="selectedFilter.type === filter.type"
-              (click)="selectFilter(filter)"
+              [class.active]="selectedConfig.id === config.id"
+              (click)="selectConfig(config)"
             >
-              <span class="material-icons">{{ filter.icon }}</span>
-              <span class="tab-label">{{ filter.label }}</span>
+              <span class="material-icons">{{ config.icon }}</span>
+              <span class="tab-label">{{ config.label }}</span>
             </button>
           </div>
-          <div class="tab-row">
+          <div class="tab-row" *ngIf="secondRowConfigs.length > 0">
             <button
-              *ngFor="let filter of secondRowFilters"
+              *ngFor="let config of secondRowConfigs"
               class="tab-button"
-              [class.active]="selectedFilter.type === filter.type"
-              (click)="selectFilter(filter)"
+              [class.active]="selectedConfig.id === config.id"
+              (click)="selectConfig(config)"
             >
-              <span class="material-icons">{{ filter.icon }}</span>
-              <span class="tab-label">{{ filter.label }}</span>
+              <span class="material-icons">{{ config.icon }}</span>
+              <span class="tab-label">{{ config.label }}</span>
             </button>
           </div>
         </div>
 
-        <!-- Filter Info -->
+        <!-- Processing Info -->
         <div class="filter-info">
-          <span class="material-icons filter-icon">{{ selectedFilter.icon }}</span>
+          <span class="material-icons filter-icon">{{ selectedConfig.icon }}</span>
           <div>
-            <p class="filter-label">{{ selectedFilter.label }}</p>
-            <p class="filter-description">{{ selectedFilter.description }}</p>
+            <p class="filter-label">{{ selectedConfig.label }}</p>
+            <p class="filter-description">{{ selectedConfig.description }}</p>
           </div>
         </div>
 
-        <!-- Slider -->
-        <div class="slider-container">
+        <!-- Intensity Slider (if applicable) -->
+        <div class="slider-container" *ngIf="selectedConfig.hasIntensity">
           <div class="slider-header">
-            <label>Intensity</label>
-            <span class="slider-value">{{ filterValue }}{{ selectedFilter.unit }}</span>
+            <label>Intensitate</label>
+            <span class="slider-value">{{ filterValue }}{{ selectedConfig.unit }}</span>
           </div>
           <input
             type="range"
             class="slider"
-            [min]="selectedFilter.min"
-            [max]="selectedFilter.max"
+            [min]="selectedConfig.min"
+            [max]="selectedConfig.max"
             [(ngModel)]="filterValue"
             step="1"
           />
+        </div>
+
+        <!-- Custom Fields -->
+        <div class="custom-fields" *ngIf="selectedConfig.customFields && selectedConfig.customFields.length > 0">
+          <div class="custom-field" *ngFor="let field of selectedConfig.customFields">
+            <!-- Text Input -->
+            <div class="input-group" *ngIf="field.type === 'text'">
+              <label class="input-label">
+                <span class="material-icons input-icon">text_fields</span>
+                {{ field.label }}
+              </label>
+              <input
+                type="text"
+                class="text-input"
+                [placeholder]="field.placeholder || ''"
+                [(ngModel)]="customFieldValues[field.name]"
+              />
+            </div>
+
+            <!-- Number Input -->
+            <div class="input-group" *ngIf="field.type === 'number'">
+              <label class="input-label">
+                <span class="material-icons input-icon">tag</span>
+                {{ field.label }}
+              </label>
+              <input
+                type="number"
+                class="text-input"
+                [min]="field.min"
+                [max]="field.max"
+                [(ngModel)]="customFieldValues[field.name]"
+              />
+            </div>
+
+            <!-- Color Picker -->
+            <div class="input-group" *ngIf="field.type === 'color'">
+              <label class="input-label">
+                <span class="material-icons input-icon">palette</span>
+                {{ field.label }}
+              </label>
+              <div class="color-picker-wrapper">
+                <input
+                  type="color"
+                  class="color-input"
+                  [(ngModel)]="customFieldValues[field.name]"
+                />
+                <span class="color-value">{{ customFieldValues[field.name] }}</span>
+              </div>
+            </div>
+
+            <!-- Select Dropdown -->
+            <div class="input-group" *ngIf="field.type === 'select'">
+              <label class="input-label">
+                <span class="material-icons input-icon">list</span>
+                {{ field.label }}
+              </label>
+              <select
+                class="select-input"
+                [(ngModel)]="customFieldValues[field.name]"
+              >
+                <option *ngFor="let option of field.options" [value]="option">
+                  {{ option }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -126,7 +198,7 @@
             (click)="processImage()"
           >
             <span class="material-icons" [class.spinning]="isProcessing">auto_fix_high</span>
-            {{ isProcessing ? 'Processing...' : 'Process Image' }}
+            {{ isProcessing ? 'Se procesează...' : 'Procesează Imaginea' }}
           </button>
           <button
             class="btn btn-outline btn-icon"
@@ -147,28 +219,28 @@
         <div>
           <h2 class="card-title">
             <span class="material-icons">auto_awesome</span>
-            Processed Result
+            Rezultat Procesat
           </h2>
-          <p class="card-description">Compare original and processed images</p>
+          <p class="card-description">Compară imaginile originală și procesată</p>
         </div>
         <button class="btn btn-primary" (click)="downloadImage()">
           <span class="material-icons">download</span>
-          Download
+          Descarcă
         </button>
       </div>
     </div>
     <div class="card-content">
       <div class="comparison-grid">
         <div class="comparison-item">
-          <label class="comparison-label">Original</label>
+          <label class="comparison-label">Originală</label>
           <div class="comparison-image">
-            <img [src]="originalImage" alt="Original" />
+            <img [src]="originalImage" alt="Originală" />
           </div>
         </div>
         <div class="comparison-item">
-          <label class="comparison-label">Processed ({{ selectedFilter.label }})</label>
+          <label class="comparison-label">Procesată ({{ selectedConfig.label }})</label>
           <div class="comparison-image processed">
-            <img [src]="processedImage" alt="Processed" />
+            <img [src]="processedImage" alt="Procesată" />
           </div>
         </div>
       </div>

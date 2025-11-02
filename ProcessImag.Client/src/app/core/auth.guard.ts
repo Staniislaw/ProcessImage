@@ -6,13 +6,10 @@ import { AuthService } from '../my-site/services/auth.service';
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-
-  // ✅ Dacă suntem deja pe login sau register, nu redirecționăm
   const publicPaths = ['/login', '/register'];
   if (publicPaths.includes(state.url)) {
     return true;
   }
-
   if (!authService.loading()) {
     if (authService.isAuthenticated()) {
       return true;
@@ -21,7 +18,6 @@ export const authGuard: CanActivateFn = (route, state) => {
       return false;
     }
   }
-
   return new Promise<boolean>((resolve) => {
     const checkInterval = setInterval(() => {
       if (!authService.loading()) {
@@ -29,7 +25,6 @@ export const authGuard: CanActivateFn = (route, state) => {
         if (authService.isAuthenticated()) {
           resolve(true);
         } else {
-          // ❌ Nu redirecționa dacă suntem deja pe login/register
           if (!publicPaths.includes(state.url)) {
             router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
           }

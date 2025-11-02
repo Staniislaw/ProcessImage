@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { HomeService, Subscription } from './home.service';
+import { ToastrService } from 'ngx-toastr';
 interface PlanConfig {
   description: string;
   gradient: string;
@@ -20,6 +21,7 @@ interface PlanConfig {
 
 export class HomeComponent implements OnInit {
   subscriptions: Subscription[] = [];
+  private toastr = inject(ToastrService);
   loading = true;
   error = '';
   selectedPlanId: number | null = null;
@@ -73,13 +75,10 @@ export class HomeComponent implements OnInit {
       error: (err) => {
         this.error = 'Eroare la încărcarea abonamentelor. Vă rugăm încercați din nou.';
         this.loading = false;
-        console.error('Eroare API:', err);
+        this.toastr.error('Eroare API '+err, 'Eroare');
       }
     });
   }
-
-
-
 
   getPlanConfig(tip: string): PlanConfig {
     return this.planConfigs[tip] || this.planConfigs['Free'];
@@ -87,17 +86,11 @@ export class HomeComponent implements OnInit {
 
   getFeatures(subscription: Subscription): string[] {
     const features: string[] = [];
-
-    // Adaugă stocare
     features.push(`${this.formatStorage(subscription.dimensiuneMaximaMb)} stocare maximă`);
-
-    // Adaugă tipurile de procesare cu limitele lor
     if (subscription.subscripteProcesares && subscription.subscripteProcesares.length > 0) {
-      // Sortează după ID-ul tipului de procesare pentru a fi consistent
       const sortedProcessing = [...subscription.subscripteProcesares].sort(
         (a, b) => a.tipProcesare.id - b.tipProcesare.id
       );
-
       sortedProcessing.forEach(sp => {
         if (sp.limitaMax === null) {
           features.push(`✓ ${sp.tipProcesare.nume} - Nelimitat`);
@@ -106,8 +99,6 @@ export class HomeComponent implements OnInit {
         }
       });
     }
-
-    // Adaugă features generale bazate pe tip
     if (subscription.tip === 'Free') {
       features.push('Suport comunitate');
     } else if (subscription.tip === 'Premium') {
@@ -149,11 +140,11 @@ export class HomeComponent implements OnInit {
     this.selectedPlanId = subscription.id;
     this.homeService.activateSubscription(subscription.id).subscribe({
       next: (response) => {
-        alert(response.message);
+        this.toastr.info(response.message, 'Informare');
         this.selectedPlanId = null;
       },
       error: (err) => {
-        alert('Eroare la activarea abonamentului. Vă rugăm încercați din nou.');
+        this.toastr.error('Eroare la activarea abonamentului. Vă rugăm încercați din nou', 'Eroare');
         this.selectedPlanId = null;
       }
     });

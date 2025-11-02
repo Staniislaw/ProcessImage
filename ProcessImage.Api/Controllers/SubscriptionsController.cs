@@ -248,10 +248,13 @@ namespace ProcessImage.Controllers
             }
         }
         [HttpPost("activate/{id}")]
-        public async Task<IActionResult> ActivateSubscription(int id)
+        public async Task<IActionResult> ActivateSubscription(int id, [FromQuery] int? utilizatorId)
         {
-            var userId = _baseService.GetUserId();
-            var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == userId);
+            if(!utilizatorId.HasValue)
+            {
+                utilizatorId = _baseService.GetUserId();
+            }
+            var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == utilizatorId);
             if (utilizator == null)
                 return NotFound(new { message = "Utilizator nu găsit" });
 

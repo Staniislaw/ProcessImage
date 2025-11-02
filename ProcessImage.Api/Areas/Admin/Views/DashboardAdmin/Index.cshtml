@@ -1,0 +1,71 @@
+﻿@using System.Security.Claims
+@{
+    ViewData["Title"] = "Panou Admin";
+}
+
+<div class="container mt-5">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1>@ViewData["Title"]</h1>
+            <!-- Schimbă din form în simplu link -->
+            <a href="/Admin/Auth/Logout" class="btn btn-outline-danger btn-sm">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+        <hr />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-users"></i> Utilizatori</h5>
+                        <p class="card-text">Gestionează toți utilizatorii platformei</p>
+                        <a href="/Admin/DashboardAdmin/Users" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Accesează
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-cog"></i> Setări</h5>
+                        <p class="card-text">Configurează setările aplicației</p>
+                        <a href="/Admin/DashboardAdmin/Setari" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Accesează
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informații despre sesiune -->
+    <div class="mt-4 p-3 bg-light rounded">
+        <h6>Informații sesiune:</h6>
+        <p><strong>Utilizator:</strong> @User.Identity.Name</p>
+        <p><strong>Email:</strong> @User.FindFirst(ClaimTypes.Email)?.Value</p>
+        <p><strong>Rol:</strong> @User.FindFirst(ClaimTypes.Role)?.Value</p>
+        <p><strong>Autentificat:</strong> @User.Identity.IsAuthenticated</p>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function logout() {
+            // Creează un form dinamic pentru POST
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Admin/Auth/Logout';
+
+            // Adaugă anti-forgery token
+            const token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = '__RequestVerificationToken';
+            token.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            form.appendChild(token);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}
