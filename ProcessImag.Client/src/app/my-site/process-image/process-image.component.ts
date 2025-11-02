@@ -521,11 +521,8 @@ export class ProcessImageComponent implements OnInit {
     this.isCropMode = config.type === 'crop';
 
     if (this.isCropMode && this.originalImage) {
-      console.log('Entering crop mode with image:', this.originalImage.substring(0, 50));
-      // Folosim un timeout mai lung pentru a ne asigura că componenta este renderizată
       setTimeout(() => {
         if (this.cropSelector) {
-          console.log('CropSelector found, loading image...');
           this.cropSelector.loadImage(this.originalImage);
         } else {
           console.error('CropSelector not found!');
@@ -649,7 +646,6 @@ export class ProcessImageComponent implements OnInit {
     this.customFieldValues['y'] = cropArea.y;
     this.customFieldValues['width'] = cropArea.width;
     this.customFieldValues['height'] = cropArea.height;
-    console.log('Crop area selected:', cropArea);
   }
 
 }
