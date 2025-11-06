@@ -281,7 +281,6 @@
         font-size: 0.875rem;
     }
 
-    /* Modal Styles */
     .modal {
         display: none;
         position: fixed;
@@ -541,7 +540,6 @@
     </div>
 </div>
 
-<!-- Modal pentru schimbare subscripție -->
 <div id="subscriptionModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -578,7 +576,6 @@
     let allRows = [];
     let filteredRows = [];
 
-    // Inițializare
     document.addEventListener('DOMContentLoaded', function() {
         allRows = Array.from(document.querySelectorAll('#usersTableBody tr'));
         filteredRows = allRows;
@@ -587,7 +584,6 @@
         displayPage(currentPage);
     });
 
-    // Funcție de căutare
     document.getElementById('searchInput').addEventListener('input', function(e) {
         const searchTerm = e.target.value.toLowerCase();
 
@@ -669,7 +665,6 @@
         updatePagination();
     }
 
-    // Încarcă subscripțiile disponibile
     async function loadSubscriptions() {
         try {
             const response = await fetch('/api/Subscriptions');
@@ -720,7 +715,6 @@
             if (response.ok) {
                 const result = await response.json();
 
-                // Actualizează UI-ul fără refresh
                 const subscriptionResponse = await fetch(`/api/Subscriptions/${newSubscriptionId}`);
                 const subscription = await subscriptionResponse.json();
 
@@ -731,7 +725,6 @@
                 subscriptionElement.textContent = subscription.tip;
                 subscriptionIdElement.textContent = newSubscriptionId;
 
-                // Actualizează clasa badge-ului
                 badgeElement.className = `subscription-badge ${subscription.tip.toLowerCase()}`;
 
                 alert(result.message || 'Subscripția a fost schimbată cu succes!');
@@ -746,7 +739,6 @@
         }
     }
 
-    // Închide modal-ul la click pe backdrop
     document.getElementById('subscriptionModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeModal();

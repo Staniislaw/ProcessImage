@@ -7,7 +7,6 @@
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center">
             <h1>@ViewData["Title"]</h1>
-            <!-- Schimbă din form în simplu link -->
             <a href="/Admin/Auth/Logout" class="btn btn-outline-danger btn-sm">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </a>
@@ -40,7 +39,6 @@
         </div>
     </div>
 
-    <!-- Informații despre sesiune -->
     <div class="mt-4 p-3 bg-light rounded">
         <h6>Informații sesiune:</h6>
         <p><strong>Utilizator:</strong> @User.Identity.Name</p>
@@ -52,12 +50,10 @@
 @section Scripts {
     <script>
         function logout() {
-            // Creează un form dinamic pentru POST
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '/Admin/Auth/Logout';
 
-            // Adaugă anti-forgery token
             const token = document.createElement('input');
             token.type = 'hidden';
             token.name = '__RequestVerificationToken';

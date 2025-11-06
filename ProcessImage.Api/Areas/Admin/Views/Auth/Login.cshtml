@@ -343,7 +343,6 @@
 
     <script>
         $(document).ready(function() {
-            // Client-side validation enhancement
             $('#loginForm').on('submit', function() {
                 const email = $('#Email').val();
                 const password = $('#Parola').val();
@@ -352,12 +351,10 @@
                     return false;
                 }
 
-                // Show loading state
                 $('.btn-login').html('<i class="fas fa-spinner fa-spin"></i> Se autentifică...');
                 $('.btn-login').prop('disabled', true);
             });
 
-            // Add input animations
             $('.form-control').on('focus', function() {
                 $(this).parent().addClass('focused');
             }).on('blur', function() {
