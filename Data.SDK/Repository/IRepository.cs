@@ -34,6 +34,7 @@ namespace Data.SDK.Repository
         Task<T> AddAsync(T entity);
         Task UpdateAsync(T entity);
         void Remove(T entity);
+        Task DeleteAsync(T entity);
 
         // Salvarea modificărilor
         Task<int> SaveChangesAsync();

@@ -66,6 +66,7 @@ namespace Data.SDK.Repository
                                  .AsNoTracking()
                                  .FirstOrDefaultAsync(predicate);
         }
+        
         public async Task<T?> GetAsync(
             Expression<Func<T, bool>> predicate,
             Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null)
@@ -118,6 +119,12 @@ namespace Data.SDK.Repository
         public void Remove(T entity)
         {
             _context.Set<T>().Remove(entity);
+        }
+        public async Task DeleteAsync(T entity)
+        {
+            _context.Set<T>().Remove(entity);
+
+            await _context.SaveChangesAsync();
         }
         public async Task<int> SaveChangesAsync()
         {
