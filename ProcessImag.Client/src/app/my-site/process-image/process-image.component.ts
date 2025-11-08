@@ -77,7 +77,11 @@ export class ProcessImageComponent implements OnInit {
   tempCropArea: CropArea | null = null;
   @ViewChild('cropSelectorRef') cropSelector?: CropSelectorComponent;
 
-  // Mappings pentru icoane și descrieri
+  referenceImage: string = '';
+  referenceFile: File | null = null;
+  showReferenceUpload: boolean = false;
+
+
   private typeConfig: { [key: string]: { icon: string; description: string; config: Partial<ProcessingConfig> } } = {
     'Resize': {
       icon: 'photo_size_select_large',
@@ -170,6 +174,14 @@ export class ProcessImageComponent implements OnInit {
           }
         ]
       }
+    },
+    'transfercolors': {
+      icon: 'palette',
+      description: 'Transferă culori de la o imagine la alta',
+      config: {
+        hasIntensity: false,
+        customFields: []
+      }
     }
   };
 
@@ -180,7 +192,8 @@ export class ProcessImageComponent implements OnInit {
     'Filter': 'Filtre',
     'Compress': 'Comprimare',
     'Rotate': 'Rotire',
-    'Watermark': 'Watermark'
+    'Watermark': 'Watermark',
+    'transfercolors': 'Transfer Culori'
   };
 
   processingTypes: ProcessingType[] = [];
@@ -237,7 +250,8 @@ export class ProcessImageComponent implements OnInit {
       { id: 3, nume: 'Filter' },
       { id: 4, nume: 'Compress' },
       { id: 5, nume: 'Rotate' },
-      { id: 6, nume: 'Watermark' }
+      { id: 6, nume: 'Watermark' },
+      { id: 10003, nume: 'transfercolors' }
     ];
     this.createProcessingConfigs();
     if (this.processingConfigs.length > 0) {
@@ -519,7 +533,7 @@ export class ProcessImageComponent implements OnInit {
     this.initializeCustomFields();
 
     this.isCropMode = config.type === 'crop';
-
+    this.showReferenceUpload = config.type === 'transfercolors';
     if (this.isCropMode && this.originalImage) {
       setTimeout(() => {
         if (this.cropSelector) {
@@ -549,6 +563,10 @@ export class ProcessImageComponent implements OnInit {
   get secondRowConfigs(): ProcessingConfig[] {
     return this.processingConfigs.slice(3);
   }
+  get thirdRowConfigs(): ProcessingConfig[] {
+    return this.processingConfigs.slice(6);
+  }
+
 
   showToastMessage(message: string, type: string): void {
     this.toastMessage = message;
@@ -559,87 +577,117 @@ export class ProcessImageComponent implements OnInit {
   }
   processImageBackend(): void {
     if (!this.fileInput.nativeElement.files?.length || !this.selectedConfig) return;
+
     const file = this.fileInput.nativeElement.files[0];
     this.isProcessing = true;
 
     const type = this.selectedConfig.type;
-    let request$: Observable<Blob>;
-
-    switch (type) {
-      case 'resize':
-        request$ = this.imageService.processResize(file, this.filterValue);
-        break;
-
-      case 'crop':
-        request$ = this.imageService.processCrop(
-          file,
-          this.customFieldValues['x'] || 0,
-          this.customFieldValues['y'] || 0,
-          this.customFieldValues['width'] || 300,
-          this.customFieldValues['height'] || 300
-        );
-        break;
-
-      case 'filter':
-        request$ = this.imageService.processFilter(
-          file,
-          (this.customFieldValues['filterType'] || 'Grayscale').toLowerCase(),
-          this.filterValue
-        );
-        break;
-
-      case 'compress':
-        request$ = this.imageService.processCompress(file, this.filterValue);
-        break;
-
-      case 'rotate':
-        request$ = this.imageService.processRotate(file, this.filterValue);
-        break;
-
-      case 'watermark':
-        // Mapare pentru pozițiile din română în engleză
-        const positionMap: { [key: string]: string } = {
-          'Stânga Sus': 'TopLeft',
-          'Centru Sus': 'TopCenter',
-          'Dreapta Sus': 'TopRight',
-          'Centru': 'Center',
-          'Stânga Jos': 'BottomLeft',
-          'Centru Jos': 'BottomCenter',
-          'Dreapta Jos': 'BottomRight'
-        };
-
-        const romanianPosition = this.customFieldValues['position'] || 'Dreapta Jos';
-        const englishPosition = positionMap[romanianPosition] || 'BottomRight';
-
-        request$ = this.imageService.processWatermark(
-          file,
-          this.customFieldValues['text'] || 'Watermark',
-          this.customFieldValues['fontSize'] || 48,
-          this.customFieldValues['color'] || '#ffffff',
-          englishPosition,
-          this.customFieldValues['opacity'] || 50
-        );
-        break;
-
-      default:
-        this.showToastMessage('Tip de procesare necunoscut', 'error');
+    const processingType = this.processingTypes.find(t => t.nume.toLowerCase() === type.toLowerCase());
+    if (!processingType) {
+      this.showToastMessage('Tip de procesare necunoscut', 'error');
+      this.isProcessing = false;
+      return;
+    }
+    const processingTypeId = processingType.id;
+    this.imageService.checkProcessingLimit(processingTypeId).subscribe(result => {
+      if (!result.canProcess) {
+        this.showToastMessage(result.message || 'Limita atinsă', 'error');
         this.isProcessing = false;
         return;
-    }
-
-    request$.subscribe({
-      next: (blob) => {
-        this.processedImage = URL.createObjectURL(blob);
-        this.isProcessing = false;
-        this.showToastMessage('Imagine procesată cu succes!', 'success');
-      },
-      error: (err) => {
-        console.error('Eroare la procesarea imaginii:', err);
-        this.isProcessing = false;
-        this.showToastMessage('Eroare la procesare imagine', 'error');
       }
+
+      let request$: Observable<Blob>;
+
+      switch (type) {
+        case 'resize':
+          request$ = this.imageService.processResize(file, this.filterValue);
+          break;
+
+        case 'crop':
+          request$ = this.imageService.processCrop(
+            file,
+            this.customFieldValues['x'] || 0,
+            this.customFieldValues['y'] || 0,
+            this.customFieldValues['width'] || 300,
+            this.customFieldValues['height'] || 300
+          );
+          break;
+
+        case 'filter':
+          request$ = this.imageService.processFilter(
+            file,
+            (this.customFieldValues['filterType'] || 'Grayscale').toLowerCase(),
+            this.filterValue
+          );
+          break;
+
+        case 'compress':
+          request$ = this.imageService.processCompress(file, this.filterValue);
+          break;
+
+        case 'rotate':
+          request$ = this.imageService.processRotate(file, this.filterValue);
+          break;
+
+        case 'transfercolors':
+          if (!this.referenceFile) {
+            this.showToastMessage('Selectează o imagine de referință', 'error');
+            this.isProcessing = false;
+            return;
+          }
+          request$ = this.imageService.processTransferColors(file, this.referenceFile);
+          break;
+
+        case 'watermark':
+          const positionMap: { [key: string]: string } = {
+            'Stânga Sus': 'TopLeft',
+            'Centru Sus': 'TopCenter',
+            'Dreapta Sus': 'TopRight',
+            'Centru': 'Center',
+            'Stânga Jos': 'BottomLeft',
+            'Centru Jos': 'BottomCenter',
+            'Dreapta Jos': 'BottomRight'
+          };
+
+          const romanianPosition = this.customFieldValues['position'] || 'Dreapta Jos';
+          const englishPosition = positionMap[romanianPosition] || 'BottomRight';
+
+          request$ = this.imageService.processWatermark(
+            file,
+            this.customFieldValues['text'] || 'Watermark',
+            this.customFieldValues['fontSize'] || 48,
+            this.customFieldValues['color'] || '#ffffff',
+            englishPosition,
+            this.customFieldValues['opacity'] || 50
+          );
+          break;
+
+        default:
+          this.showToastMessage('Tip de procesare necunoscut', 'error');
+          this.isProcessing = false;
+          return;
+      }
+
+      request$.subscribe({
+        next: (blob) => {
+          this.processedImage = URL.createObjectURL(blob);
+          this.isProcessing = false;
+          this.showToastMessage('Imagine procesată cu succes!', 'success');
+        },
+        error: (err) => {
+          console.error('Eroare la procesarea imaginii:', err);
+          this.isProcessing = false;
+          this.showToastMessage('Eroare la procesare imagine', 'error');
+        }
+      });
+
+    }, error => {
+      console.error('Eroare la verificarea limitei:', error);
+      this.showToastMessage('Eroare la verificarea limitei', 'error');
+      this.isProcessing = false;
     });
   }
+
 
   onCropAreaSelected(cropArea: CropArea) {
     this.customFieldValues['x'] = cropArea.x;
@@ -647,5 +695,21 @@ export class ProcessImageComponent implements OnInit {
     this.customFieldValues['width'] = cropArea.width;
     this.customFieldValues['height'] = cropArea.height;
   }
+  handleReferenceFileSelect(file: File): void {
+    if (!file.type.startsWith('image/')) {
+      this.showToastMessage('Te rugăm selectează un fișier imagine', 'error');
+      return;
+    }
+
+    this.referenceFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.referenceImage = (e.target?.result as string) || '';
+      this.showToastMessage('Imagine de referință încărcată!', 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+
+
 
 }

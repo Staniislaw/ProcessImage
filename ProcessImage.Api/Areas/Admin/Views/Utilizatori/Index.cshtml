@@ -43,17 +43,17 @@
         align-items: center;
     }
 
-    .page-header h1 {
-        margin: 0;
-        font-size: 2rem;
-        font-weight: 700;
-    }
+        .page-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
 
-    .page-header p {
-        margin: 0.5rem 0 0 0;
-        opacity: 0.9;
-        font-size: 1rem;
-    }
+        .page-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            font-size: 1rem;
+        }
 
     .btn-create {
         background: white;
@@ -70,11 +70,11 @@
         gap: 0.5rem;
     }
 
-    .btn-create:hover {
-        background: var(--bg-light);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-    }
+        .btn-create:hover {
+            background: var(--bg-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
 
     .controls-section {
         background: white;
@@ -91,20 +91,28 @@
         max-width: 500px;
     }
 
-    .search-box input {
-        width: 100%;
-        padding: 0.75rem 1rem 0.75rem 3rem;
-        border: 2px solid var(--border-color);
-        border-radius: 10px;
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
-    }
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
 
-    .search-box input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
+            .search-box input:focus {
+                outline: none;
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
 
     .users-table-container {
         background: white;
@@ -119,34 +127,34 @@
         border-collapse: collapse;
     }
 
-    .users-table thead {
-        background: var(--bg-light);
-        border-bottom: 2px solid var(--border-color);
-    }
+        .users-table thead {
+            background: var(--bg-light);
+            border-bottom: 2px solid var(--border-color);
+        }
 
-    .users-table th {
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        font-size: 0.875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--text-secondary);
-    }
+        .users-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
 
-    .users-table tbody tr {
-        border-bottom: 1px solid var(--border-color);
-        transition: background-color 0.2s ease;
-    }
+        .users-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+        }
 
-    .users-table tbody tr:hover {
-        background-color: #fafbfc;
-    }
+            .users-table tbody tr:hover {
+                background-color: #fafbfc;
+            }
 
-    .users-table td {
-        padding: 1rem;
-        vertical-align: middle;
-    }
+        .users-table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
 
     .user-info {
         display: flex;
@@ -218,23 +226,32 @@
         gap: 0.5rem;
     }
 
+    .btn-plan {
+        background: var(--warning-color);
+        color: white;
+    }
+
+        .btn-plan:hover {
+            background: #d97706;
+        }
+
     .btn-edit {
         background: var(--primary-color);
         color: white;
     }
 
-    .btn-edit:hover {
-        background: var(--primary-hover);
-    }
+        .btn-edit:hover {
+            background: var(--primary-hover);
+        }
 
     .btn-delete {
         background: var(--danger-color);
         color: white;
     }
 
-    .btn-delete:hover {
-        background: #dc2626;
-    }
+        .btn-delete:hover {
+            background: #dc2626;
+        }
 
     .alert {
         padding: 1rem;
@@ -261,6 +278,116 @@
         flex-wrap: wrap;
         gap: 1rem;
     }
+
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 450px;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+            .form-group select:focus {
+                outline: none;
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+
+    .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .btn-modal {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-modal-cancel {
+        background: var(--bg-light);
+        color: var(--text-primary);
+    }
+
+    .btn-modal-save {
+        background: var(--primary-color);
+        color: white;
+    }
+
+        .btn-modal-save:hover {
+            background: var(--primary-hover);
+        }
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -328,13 +455,16 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="badge badge-subscription">
+                                <span class="badge badge-subscription" id="subscription-@user.Id">
                                     <i class="fas fa-crown"></i>
                                     @user.SubscriptieTip
                                 </span>
                             </td>
                             <td>
                                 <div class="actions-cell">
+                                    <button class="btn-action btn-plan" onclick="openPlanModal(@user.Id, '@user.Nume', @user.SubscriptieId)">
+                                        <i class="fas fa-crown"></i> Schimbă Plan
+                                    </button>
                                     <a href="/Admin/Utilizatori/Edit/@user.Id" class="btn-action btn-edit">
                                         <i class="fas fa-edit"></i> Editează
                                     </a>
@@ -360,16 +490,108 @@
         }
     </div>
 </div>
+<div id="planModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-crown"></i> Schimbă Planul</h3>
+            <button class="modal-close" onclick="closePlanModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Utilizator:</label>
+                <input type="text" id="modalUserName" readonly style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-light);">
+            </div>
+            <div class="form-group">
+                <label for="newPlanId">Selectează Planul Nou:</label>
+                <select id="newPlanId">
+                    <option value="">Se încarcă...</option>
+                </select>
+            </div>
+            <input type="hidden" id="modalUserId">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" onclick="closePlanModal()">
+                <i class="fas fa-times"></i> Anulează
+            </button>
+            <button class="btn-modal btn-modal-save" onclick="savePlan()">
+                <i class="fas fa-check"></i> Salvează
+            </button>
+        </div>
+    </div>
+</div>
 
 <script>
+    let currentUserId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPlans();
+    });
     document.getElementById('searchInput')?.addEventListener('input', function(e) {
         const searchTerm = e.target.value.toLowerCase();
         const rows = document.querySelectorAll('#usersTableBody tr');
         rows.forEach(row => {
             const userName = row.dataset.userName || '';
             const userEmail = row.dataset.userEmail || '';
-            row.style.display = 
+            row.style.display =
                 userName.includes(searchTerm) || userEmail.includes(searchTerm) ? '' : 'none';
         });
+    });
+    async function loadPlans() {
+        try {
+            const response = await fetch('/api/Subscriptions');
+            const plans = await response.json();
+            const select = document.getElementById('newPlanId');
+            select.innerHTML = '<option value="">Selectează un plan...</option>';
+
+            plans.forEach(plan => {
+                const option = document.createElement('option');
+                option.value = plan.id;
+                option.textContent = `${plan.tip} - ${plan.pret} RON`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Eroare:', error);
+        }
+    }
+    function openPlanModal(userId, userName, currentPlanId) {
+        currentUserId = userId;
+        document.getElementById('modalUserId').value = userId;
+        document.getElementById('modalUserName').value = userName;
+        document.getElementById('newPlanId').value = currentPlanId;
+        document.getElementById('planModal').classList.add('active');
+    }
+    function closePlanModal() {
+        document.getElementById('planModal').classList.remove('active');
+    }
+    async function savePlan() {
+        const planId = document.getElementById('newPlanId').value;
+
+        if (!planId) {
+            alert('Selectează un plan!');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/Subscriptions/activate/${planId}?utilizatorId=${currentUserId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(result.message || 'Planul a fost schimbat cu succes!');
+                closePlanModal();
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert(error.message || 'Eroare la schimbarea planului');
+            }
+        } catch (error) {
+            console.error('Eroare:', error);
+            alert('A apărut o eroare');
+        }
+    }
+    document.getElementById('planModal').addEventListener('click', function(e) {
+        if (e.target === this) closePlanModal();
     });
 </script>

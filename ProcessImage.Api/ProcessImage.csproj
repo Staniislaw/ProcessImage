@@ -29,8 +29,6 @@
 
   <ItemGroup>
     <Folder Include="Data\Mappings\ProcessImageMap\" />
-    <Folder Include="Helpers\" />
-    <Folder Include="Models\" />
   </ItemGroup>
 
   <ItemGroup>

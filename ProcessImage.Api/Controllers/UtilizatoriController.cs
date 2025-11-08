@@ -231,6 +231,95 @@ namespace ProcessImage.Controllers
                 return RedirectToAction("Index");
             }
         }
-    }
 
+        [HttpGet("EditUser/{id}")]
+        public async Task<IActionResult> EditUser(long id)
+        {
+            try
+            {
+                var utilizator = await _utilizatorRepository.GetAsync(
+                    u => u.Id == id,
+                    includes: query => query
+                        .Include(u => u.Rol)
+                        .Include(u => u.Subscriptie)
+                );
+                if (utilizator == null)
+                {
+                    return NotFound();
+                }
+                var model = new EditUserViewModel
+                {
+                    Id = utilizator.Id,
+                    Nume = utilizator.Nume,
+                    Email = utilizator.Email,
+                    RolId = utilizator.RolId ?? 0
+                };
+                var roles = await _rolRepository.GetAllAsync();
+                ViewBag.Roles = roles;
+                return View("Edit", model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Eroare la editarea utilizatorului: {ex.Message}");
+                return NotFound();
+            }
+        }
+
+        [HttpPost("UpdateUser/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateUser(long id, EditUserViewModel model)
+        {
+            if (id != model.Id)
+                return BadRequest();
+
+            if (!ModelState.IsValid)
+            {
+                var roles = await _rolRepository.GetAllAsync();
+                ViewBag.Roles = roles;
+                return View("Edit", model);
+            }
+
+            try
+            {
+                var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == id);
+                if (utilizator == null)
+                    return NotFound();
+
+                var existingEmail = await _utilizatorRepository.GetAsync(
+                    u => u.Email == model.Email && u.Id != id
+                );
+
+                if (existingEmail != null)
+                {
+                    ModelState.AddModelError("Email", "Acest email este deja folosit");
+                    var roles = await _rolRepository.GetAllAsync();
+                    ViewBag.Roles = roles;
+                    return View("Edit", model);
+                }
+
+                utilizator.Nume = model.Nume;
+                utilizator.Email = model.Email;
+                utilizator.RolId = model.RolId;
+
+                if (!string.IsNullOrWhiteSpace(model.NovaParola))
+                {
+                    utilizator.Parola = BCrypt.Net.BCrypt.HashPassword(model.NovaParola);
+                }
+
+                await _utilizatorRepository.UpdateAsync(utilizator);
+                await _utilizatorRepository.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Utilizatorul {model.Nume} a fost actualizat cu succes!";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Eroare la editarea utilizatorului: {ex.Message}");
+                ModelState.AddModelError("", $"Eroare la actualizarea utilizatorului: {ex.Message}");
+                var roles = await _rolRepository.GetAllAsync();
+                ViewBag.Roles = roles;
+                return View("Edit", model);
+            }
+        }
+    }
 }

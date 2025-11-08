@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using ProcessImage.Services.Interface;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ProcessImage.Controllers
 {
@@ -182,28 +183,6 @@ namespace ProcessImage.Controllers
                 });
             }
         }
-        [HttpGet("check-limit")]
-        public async Task<ActionResult> CheckProcessingLimit(
-            [FromQuery] int utilizatorId,
-            [FromQuery] int tipProcesareId)
-        {
-            try
-            {
-                return Ok(new
-                {
-                    CanProcess = true,
-                    Message = "Verificare implementată - necesită logică de business specifică"
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    message = "Eroare la verificarea limitei.",
-                    error = ex.Message
-                });
-            }
-        }
         [HttpGet("report")]
         public async Task<ActionResult> GetSubscriptionsReport()
         {
@@ -248,6 +227,7 @@ namespace ProcessImage.Controllers
             }
         }
         [HttpPost("activate/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> ActivateSubscription(int id, [FromQuery] int? utilizatorId)
         {
             if(!utilizatorId.HasValue)
@@ -269,6 +249,41 @@ namespace ProcessImage.Controllers
             {
                 message = $"Abonamentul {subscriptie.Tip} a fost activat cu succes!"
             });
+        }
+        [HttpGet("check-limit")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<ActionResult> CheckProcessingLimit([FromQuery] int tipProcesareId)
+        {
+            try
+            {
+                var userId = _baseService.GetUserId();
+                var (canProcess, message, used, remaining) = await _baseService.CheckProcessingLimitAsync(userId, tipProcesareId);
+                return Ok(new
+                {
+                    CanProcess = canProcess,
+                    Message = message,
+                    ProceseUtilizate = used,
+                    ProceseRamase = remaining,
+                    TipProcesareId = tipProcesareId,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new
+                {
+                    message = "Utilizator neautentificat",
+                    error = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Eroare la verificarea limitei",
+                    error = ex.Message
+                });
+            }
         }
     }
 

@@ -1,10 +1,4 @@
 ﻿using Data.SDK.Repository;
-
-using ProcessImage.Domain;
-
-using static System.Net.Mime.MediaTypeNames;
-using ProcessImage.repository;
-using ProcessImage.repository.Interface;
 using ProcessImage.Repository;
 using ProcessImage.Repository.Interfaces;
 using ProcessImage.Services;
@@ -21,6 +15,7 @@ namespace ProcessImage.Infrastructure
             services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
             services.AddScoped<IUtilizatorRepository, UtilizatorRepository>();
             services.AddScoped<IBaseService, BaseService>();
+            services.AddScoped<IImageProcessingService,ImageProcessingService>();
             //services.AddScoped<IUserService, UserService>();
         }
 

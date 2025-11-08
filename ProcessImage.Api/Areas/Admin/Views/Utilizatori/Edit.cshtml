@@ -1,0 +1,399 @@
+﻿@model ProcessImage.ViewModels.EditUserViewModel
+@{
+    ViewData["Title"] = "Editare Utilizator";
+    var roles = ViewBag.Roles as List<ProcessImage.Entities.Rol>;
+}
+
+<style>
+    :root {
+        --primary-color: #4f46e5;
+        --primary-hover: #4338ca;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+        --bg-light: #f9fafb;
+        --border-color: #e5e7eb;
+        --text-primary: #111827;
+        --text-secondary: #6b7280;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        background-color: var(--bg-light);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: var(--text-primary);
+    }
+
+    .edit-wrapper {
+        min-height: 100vh;
+        padding: 2rem 1rem;
+    }
+
+    .edit-container {
+        max-width: 650px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #7c3aed 100%);
+        padding: 2rem;
+        color: white;
+        text-align: center;
+    }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .page-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+    .form-content {
+        padding: 2rem;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+        .alert i {
+            font-size: 1.1rem;
+            margin-top: 0.1rem;
+            flex-shrink: 0;
+        }
+
+    .alert-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
+        .alert-danger ul {
+            margin: 0.5rem 0 0 0;
+            padding-left: 1.5rem;
+        }
+
+        .alert-danger li {
+            margin: 0.25rem 0;
+        }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+            .form-group input:focus,
+            .form-group select:focus {
+                outline: none;
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+
+        .form-group.has-error input,
+        .form-group.has-error select {
+            border-color: var(--danger-color);
+        }
+
+            .form-group.has-error input:focus,
+            .form-group.has-error select:focus {
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+            }
+
+    .error-message {
+        color: var(--danger-color);
+        font-size: 0.85rem;
+        margin-top: 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+        .error-message i {
+            font-size: 0.75rem;
+        }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 0.35rem;
+    }
+
+    .password-section {
+        background: #fef3c7;
+        border-left: 4px solid var(--warning-color);
+        padding: 1.25rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+    }
+
+        .password-section h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .password-section p {
+            margin: 0 0 1rem 0;
+            color: #92400e;
+            font-size: 0.9rem;
+        }
+
+        .password-section .form-group {
+            margin-bottom: 1rem;
+        }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: space-between;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        min-height: 44px;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+        flex: 1;
+    }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: var(--text-primary);
+        flex: 0 1 auto;
+        min-width: 120px;
+    }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+    @@media (max-width: 600px) {
+        .edit-wrapper
+
+    {
+        padding: 1rem;
+    }
+
+    .form-content {
+        padding: 1.5rem;
+    }
+
+    .page-header {
+        padding: 1.5rem;
+    }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .btn-secondary {
+        min-width: auto;
+    }
+
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="edit-wrapper">
+    <div class="edit-container">
+        <div class="page-header">
+            <h1>
+                <i class="fas fa-edit"></i> Editare Utilizator
+            </h1>
+            <p>Actualizează informațiile utilizatorului</p>
+        </div>
+
+        <div class="form-content">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div>
+                        <strong>Erori în formular:</strong>
+                        <ul>
+                            @foreach (var modelState in ViewData.ModelState.Values)
+                            {
+                                @foreach (var error in modelState.Errors)
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <form method="post" action="/Admin/Utilizatori/UpdateUser/@Model.Id" novalidate>
+                @Html.HiddenFor(m => m.Id)
+                @Html.AntiForgeryToken()
+                <div class="form-group @(ViewData.ModelState.ContainsKey(nameof(Model.Nume)) && ViewData.ModelState[nameof(Model.Nume)].Errors.Count > 0 ? "has-error" : "")">
+                    <label for="Nume">
+                        <i class="fas fa-user" style="color: var(--primary-color); margin-right: 0.35rem;"></i>
+                        Nume Utilizator
+                    </label>
+                    <input type="text" id="Nume" name="Nume" value="@Model.Nume" required>
+                    @if (ViewData.ModelState.ContainsKey(nameof(Model.Nume)) && ViewData.ModelState[nameof(Model.Nume)].Errors.Count > 0)
+                    {
+                        <div class="error-message">
+                            <i class="fas fa-times-circle"></i>
+                            @ViewData.ModelState[nameof(Model.Nume)].Errors[0].ErrorMessage
+                        </div>
+                    }
+                </div>
+                <div class="form-group @(ViewData.ModelState.ContainsKey(nameof(Model.Email)) && ViewData.ModelState[nameof(Model.Email)].Errors.Count > 0 ? "has-error" : "")">
+                    <label for="Email">
+                        <i class="fas fa-envelope" style="color: var(--primary-color); margin-right: 0.35rem;"></i>
+                        Email
+                    </label>
+                    <input type="email" id="Email" name="Email" value="@Model.Email" required>
+                    @if (ViewData.ModelState.ContainsKey(nameof(Model.Email)) && ViewData.ModelState[nameof(Model.Email)].Errors.Count > 0)
+                    {
+                        <div class="error-message">
+                            <i class="fas fa-times-circle"></i>
+                            @ViewData.ModelState[nameof(Model.Email)].Errors[0].ErrorMessage
+                        </div>
+                    }
+                </div>
+                <div class="form-group @(ViewData.ModelState.ContainsKey(nameof(Model.RolId)) && ViewData.ModelState[nameof(Model.RolId)].Errors.Count > 0 ? "has-error" : "")">
+                    <label for="RolId">
+                        <i class="fas fa-shield-alt" style="color: var(--primary-color); margin-right: 0.35rem;"></i>
+                        Rol
+                    </label>
+                    <select id="RolId" name="RolId" required>
+                        <option value="">-- Selectează rol --</option>
+                        @if (roles != null)
+                        {
+                            @foreach (var rol in roles)
+                            {
+                                <option value="@rol.Id" @(Model.RolId == rol.Id ? "selected" : "")>@rol.NumeRol</option>
+                            }
+                        }
+                    </select>
+                    @if (ViewData.ModelState.ContainsKey(nameof(Model.RolId)) && ViewData.ModelState[nameof(Model.RolId)].Errors.Count > 0)
+                    {
+                        <div class="error-message">
+                            <i class="fas fa-times-circle"></i>
+                            @ViewData.ModelState[nameof(Model.RolId)].Errors[0].ErrorMessage
+                        </div>
+                    }
+                </div>
+                <div class="password-section">
+                    <h3>
+                        <i class="fas fa-lock"></i> Schimbă Parola
+                    </h3>
+                    <p>Lasă câmpurile goale dacă nu vrei să schimbi parola</p>
+
+                    <div class="form-group @(ViewData.ModelState.ContainsKey(nameof(Model.NovaParola)) && ViewData.ModelState[nameof(Model.NovaParola)].Errors.Count > 0 ? "has-error" : "")">
+                        <label for="NovaParola">
+                            <i class="fas fa-key" style="color: #92400e; margin-right: 0.35rem;"></i>
+                            Parola Nouă
+                        </label>
+                        <input type="password" id="NovaParola" name="NovaParola" placeholder="Minimum 6 caractere">
+                        @if (ViewData.ModelState.ContainsKey(nameof(Model.NovaParola)) && ViewData.ModelState[nameof(Model.NovaParola)].Errors.Count > 0)
+                        {
+                            <div class="error-message">
+                                <i class="fas fa-times-circle"></i>
+                                @ViewData.ModelState[nameof(Model.NovaParola)].Errors[0].ErrorMessage
+                            </div>
+                        }
+                    </div>
+
+                    <div class="form-group @(ViewData.ModelState.ContainsKey(nameof(Model.ConfirmaNovaParola)) && ViewData.ModelState[nameof(Model.ConfirmaNovaParola)].Errors.Count > 0 ? "has-error" : "")">
+                        <label for="ConfirmaNovaParola">
+                            <i class="fas fa-key" style="color: #92400e; margin-right: 0.35rem;"></i>
+                            Confirmă Parola Nouă
+                        </label>
+                        <input type="password" id="ConfirmaNovaParola" name="ConfirmaNovaParola" placeholder="Confirmă parola nouă">
+                        @if (ViewData.ModelState.ContainsKey(nameof(Model.ConfirmaNovaParola)) && ViewData.ModelState[nameof(Model.ConfirmaNovaParola)].Errors.Count > 0)
+                        {
+                            <div class="error-message">
+                                <i class="fas fa-times-circle"></i>
+                                @ViewData.ModelState[nameof(Model.ConfirmaNovaParola)].Errors[0].ErrorMessage
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <a href="/Admin/Utilizatori/Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Înapoi
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvează Modificări
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

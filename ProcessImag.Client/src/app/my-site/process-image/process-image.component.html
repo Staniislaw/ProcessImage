@@ -77,6 +77,13 @@
               <span class="tab-label">{{ config.label }}</span>
             </button>
           </div>
+          <div class="tab-row" *ngIf="thirdRowConfigs.length > 0">
+            <button *ngFor="let config of thirdRowConfigs" class="tab-button"
+              [class.active]="selectedConfig.id === config.id" (click)="selectConfig(config)">
+              <span class="material-icons">{{ config.icon }}</span>
+              <span class="tab-label">{{ config.label }}</span>
+            </button>
+          </div>
         </div>
 
         <!-- Processing Info -->
@@ -98,16 +105,50 @@
             [(ngModel)]="filterValue" step="1" />
         </div>
 
-        <!-- ============= CROP VISUAL SELECTOR ============= -->
         <!-- CROP VISUAL SELECTOR -->
-        <!-- ============= CROP VISUAL SELECTOR ============= -->
         <div *ngIf="isCropMode && originalImage" class="crop-mode-container">
           <p style="margin-bottom: 10px; color: #666;">Trage cu mouse-ul pentru a selecta zona de decupare</p>
           <app-crop-selector #cropSelectorRef (cropSelected)="onCropAreaSelected($event)"></app-crop-selector>
         </div>
-        <!-- ============= CUSTOM FIELDS (pentru alte tipuri) ============= -->
+
+        <!-- TRANSFER COLORS - REFERENCE IMAGE UPLOAD -->
+        <div *ngIf="showReferenceUpload" class="reference-upload-section">
+          <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-icons">image_search</span>
+            Imaginea de Referință (Culori)
+          </h3>
+          <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+            Selectează imaginea din care să preiei culorile
+          </p>
+          
+          <div class="upload-area" style="border: 2px dashed #f59e0b; background: #fffbf0; cursor: pointer;"
+            (click)="referenceFileInput.click()">
+            <input #referenceFileInput type="file" accept="image/*" 
+              (change)="handleReferenceFileSelect(referenceFileInput.files![0])" 
+              style="display: none" />
+            
+            <div *ngIf="referenceImage; else refPlaceholder" class="image-preview">
+              <img [src]="referenceImage" alt="Referință" class="preview-img" />
+              <p class="preview-text">Click pentru a schimba referința</p>
+            </div>
+
+            <ng-template #refPlaceholder>
+              <div class="placeholder">
+                <div class="icon-circle" style="background: #fef3c7;">
+                  <span class="material-icons icon-large" style="color: #f59e0b;">palette</span>
+                </div>
+                <div class="placeholder-text">
+                  <p class="upload-title">Selectează imagine de referință</p>
+                  <p class="upload-subtitle">Culori de aici vor fi transferate</p>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- CUSTOM FIELDS (pentru alte tipuri) -->
         <div class="custom-fields"
-          *ngIf="selectedConfig.customFields && selectedConfig.customFields.length > 0 && !isCropMode">
+          *ngIf="selectedConfig.customFields && selectedConfig.customFields.length > 0 && !isCropMode && !showReferenceUpload">
           <div class="custom-field" *ngFor="let field of selectedConfig.customFields">
             <!-- Text Input -->
             <div class="input-group" *ngIf="field.type === 'text'">
@@ -158,11 +199,15 @@
 
         <!-- Action Buttons -->
         <div class="button-group">
-          <button class="btn btn-primary" [disabled]="!originalImage || isProcessing" (click)="processImage()">
+          <button class="btn btn-primary" 
+            [disabled]="!originalImage || isProcessing || (showReferenceUpload && !referenceFile)" 
+            (click)="processImage()">
             <span class="material-icons" [class.spinning]="isProcessing">auto_fix_high</span>
             {{ isProcessing ? 'Se procesează...' : 'Procesează Imaginea' }}
           </button>
-          <button class="btn btn-secondary" [disabled]="!originalImage || isProcessing" (click)="processImageBackend()">
+          <button class="btn btn-secondary" 
+            [disabled]="!originalImage || isProcessing || (showReferenceUpload && !referenceFile)" 
+            (click)="processImageBackend()">
             <span class="material-icons">cloud_upload</span>
             Procesează cu Backend
           </button>
@@ -203,6 +248,14 @@
           <label class="comparison-label">Procesată ({{ selectedConfig.label }})</label>
           <div class="comparison-image processed">
             <img [src]="processedImage" alt="Procesată" />
+          </div>
+        </div>
+        
+        <!-- Show reference image in comparison when using Transfer Colors -->
+        <div class="comparison-item" *ngIf="showReferenceUpload && referenceImage">
+          <label class="comparison-label">Referință (Culori)</label>
+          <div class="comparison-image">
+            <img [src]="referenceImage" alt="Referință" />
           </div>
         </div>
       </div>

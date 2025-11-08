@@ -6,13 +6,33 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.Fonts;
 using Color = SixLabors.ImageSharp.Color;
 using SixLabors.ImageSharp.PixelFormats;
+using ProcessImage.Helpers.ProcessImage.Helpers;
+using System.Numerics;
+using Data.SDK.Repository;
+using ProcessImage.Entities;
+using ProcessImage.Services;
+using ProcessImage.Services.Interface;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ProcessImage.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ImageProcessingController : ControllerBase
     {
+        private readonly IImageProcessingService _imageProcessingService;
+        private readonly IBaseService _baseService;
+
+        public ImageProcessingController(
+            IImageProcessingService imageProcessingService,
+            IBaseService baseService)
+        {
+            _imageProcessingService = imageProcessingService;
+            _baseService = baseService;
+        }
+
         [HttpPost("resize")]
         [Consumes("multipart/form-data")]
         [ApiExplorerSettings(IgnoreApi = true)]
@@ -22,17 +42,28 @@ namespace ProcessImage.Controllers
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectată nicio imagine.");
 
-            using var img = await Image.LoadAsync(image.OpenReadStream());
-            int width = (int)(img.Width * (scale / 100.0));
-            int height = (int)(img.Height * (scale / 100.0));
+            try
+            {
+                var userId = _baseService.GetUserId();
+                var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
+                    image,
+                    userId,
+                    1, // tipProcesareId pentru resize
+                    async img =>
+                    {
+                        int width = (int)(img.Width * (scale / 100.0));
+                        int height = (int)(img.Height * (scale / 100.0));
+                        img.Mutate(x => x.Resize(width, height));
+                        await Task.CompletedTask;
+                    }
+                );
 
-            img.Mutate(x => x.Resize(width, height));
-
-            using var ms = new MemoryStream();
-            await img.SaveAsync(ms, new PngEncoder());
-            ms.Position = 0;
-
-            return File(ms.ToArray(), "image/png", $"resized-{DateTime.Now.Ticks}.png");
+                return File(imageBytes, "image/png", $"resized-{DateTime.Now.Ticks}.png");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Eroare la resize: {ex.Message}");
+            }
         }
 
         [HttpPost("crop")]
@@ -45,31 +76,61 @@ namespace ProcessImage.Controllers
                 return BadRequest("Nu a fost selectată nicio imagine.");
             if (width <= 0 || height <= 0)
                 return BadRequest("Lățimea și înălțimea trebuie să fie pozitive.");
-            using var img = await Image.LoadAsync(image.OpenReadStream());
-            if (x < 0 || y < 0 || x + width > img.Width || y + height > img.Height)
-                return BadRequest("Coordonatele de decupare sunt în afara imaginii.");
-            img.Mutate(i => i.Crop(new Rectangle(x, y, width, height)));
 
-            using var ms = new MemoryStream();
-            await img.SaveAsync(ms, new PngEncoder());
-            ms.Position = 0;
+            try
+            {
+                var userId = _baseService.GetUserId();
+                var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
+                    image,
+                    userId,
+                    2, // tipProcesareId pentru crop
+                    async img =>
+                    {
+                        if (x < 0 || y < 0 || x + width > img.Width || y + height > img.Height)
+                            throw new ArgumentException("Coordonatele de decupare sunt în afara imaginii.");
 
-            return File(ms.ToArray(), "image/png", $"cropped-{DateTime.Now.Ticks}.png");
+                        img.Mutate(i => i.Crop(new Rectangle(x, y, width, height)));
+                        await Task.CompletedTask;
+                    }
+                );
+
+                return File(imageBytes, "image/png", $"cropped-{DateTime.Now.Ticks}.png");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Eroare la crop: {ex.Message}");
+            }
         }
+
         [HttpPost("rotate")]
         [Consumes("multipart/form-data")]
         [ApiExplorerSettings(IgnoreApi = true)]
         [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
         public async Task<IActionResult> Rotate([FromForm] IFormFile image, [FromForm] float angle)
         {
-            using var img = await Image.LoadAsync(image.OpenReadStream());
-            img.Mutate(i => i.Rotate(angle));
+            if (image == null || image.Length == 0)
+                return BadRequest("Nu a fost selectată nicio imagine.");
 
-            using var ms = new MemoryStream();
-            await img.SaveAsync(ms, new PngEncoder());
-            ms.Position = 0;
+            try
+            {
+                var userId = _baseService.GetUserId();
+                var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
+                    image,
+                    userId,
+                    3, // tipProcesareId pentru rotate
+                    async img =>
+                    {
+                        img.Mutate(i => i.Rotate(angle));
+                        await Task.CompletedTask;
+                    }
+                );
 
-            return File(ms.ToArray(), "image/png", $"rotated-{DateTime.Now.Ticks}.png");
+                return File(imageBytes, "image/png", $"rotated-{DateTime.Now.Ticks}.png");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Eroare la rotate: {ex.Message}");
+            }
         }
 
         [HttpPost("filter")]
@@ -78,35 +139,51 @@ namespace ProcessImage.Controllers
         [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
         public async Task<IActionResult> Filter([FromForm] IFormFile image, [FromForm] string filterType, [FromForm] int intensity)
         {
-            using var img = await Image.LoadAsync(image.OpenReadStream());
+            if (image == null || image.Length == 0)
+                return BadRequest("Nu a fost selectată nicio imagine.");
 
-            switch (filterType.ToLower())
+            try
             {
-                case "grayscale":
-                    img.Mutate(x => x.Grayscale());
-                    break;
-                case "invert":
-                    img.Mutate(x => x.Invert());
-                    break;
-                case "blur":
-                    img.Mutate(x => x.GaussianBlur(intensity / 10f));
-                    break;
-                case "brightness":
-                    img.Mutate(x => x.Brightness(intensity / 100f));
-                    break;
-                case "contrast":
-                    img.Mutate(x => x.Contrast(intensity / 100f));
-                    break;
-                case "sepia":
-                    img.Mutate(x => x.Sepia());
-                    break;
+                var userId = _baseService.GetUserId();
+                var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
+                    image,
+                    userId,
+                    4, // tipProcesareId pentru filter
+                    async img =>
+                    {
+                        switch (filterType?.ToLower())
+                        {
+                            case "grayscale":
+                                img.Mutate(x => x.Grayscale());
+                                break;
+                            case "invert":
+                                img.Mutate(x => x.Invert());
+                                break;
+                            case "blur":
+                                img.Mutate(x => x.GaussianBlur(intensity / 10f));
+                                break;
+                            case "brightness":
+                                img.Mutate(x => x.Brightness(intensity / 100f));
+                                break;
+                            case "contrast":
+                                img.Mutate(x => x.Contrast(intensity / 100f));
+                                break;
+                            case "sepia":
+                                img.Mutate(x => x.Sepia());
+                                break;
+                            default:
+                                throw new ArgumentException($"Filtrul '{filterType}' nu este suportat.");
+                        }
+                        await Task.CompletedTask;
+                    }
+                );
+
+                return File(imageBytes, "image/png", $"filtered-{DateTime.Now.Ticks}.png");
             }
-
-            using var ms = new MemoryStream();
-            await img.SaveAsync(ms, new PngEncoder());
-            ms.Position = 0;
-
-            return File(ms.ToArray(), "image/png", $"filtered-{DateTime.Now.Ticks}.png");
+            catch (Exception ex)
+            {
+                return BadRequest($"Eroare la filter: {ex.Message}");
+            }
         }
 
         [HttpPost("compress")]
@@ -115,16 +192,35 @@ namespace ProcessImage.Controllers
         [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
         public async Task<IActionResult> Compress([FromForm] IFormFile image, [FromForm] int quality)
         {
-            using var img = await Image.LoadAsync(image.OpenReadStream());
+            if (image == null || image.Length == 0)
+                return BadRequest("Nu a fost selectată nicio imagine.");
 
-            using var ms = new MemoryStream();
-            await img.SaveAsync(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
+            try
             {
-                Quality = quality
-            });
-            ms.Position = 0;
+                var userId = _baseService.GetUserId();
+                var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
+                    image,
+                    userId,
+                    5, // tipProcesareId pentru compress
+                    async img =>
+                    {
+                        // Compress se salvează ca JPEG
+                        using var ms = new MemoryStream();
+                        await img.SaveAsync(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
+                        {
+                            Quality = quality
+                        });
+                        ms.Position = 0;
+                        await Task.CompletedTask;
+                    }
+                );
 
-            return File(ms.ToArray(), "image/jpeg", $"compressed-{DateTime.Now.Ticks}.jpg");
+                return File(imageBytes, "image/jpeg", $"compressed-{DateTime.Now.Ticks}.jpg");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Eroare la compress: {ex.Message}");
+            }
         }
 
         [HttpPost("watermark")]
@@ -132,12 +228,12 @@ namespace ProcessImage.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
         public async Task<IActionResult> Watermark(
-     [FromForm] IFormFile image,
-     [FromForm] string text,
-     [FromForm] int fontSize = 48,
-     [FromForm] string color = "#FFFFFF",
-     [FromForm] string position = "BottomRight",
-     [FromForm] int opacity = 50)
+            [FromForm] IFormFile image,
+            [FromForm] string text,
+            [FromForm] int fontSize = 48,
+            [FromForm] string color = "#FFFFFF",
+            [FromForm] string position = "BottomRight",
+            [FromForm] int opacity = 50)
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectată nicio imagine.");
@@ -145,64 +241,131 @@ namespace ProcessImage.Controllers
             if (string.IsNullOrEmpty(text))
                 return BadRequest("Textul nu poate fi gol.");
 
-            using var img = await Image.LoadAsync(image.OpenReadStream());
-            var font = SystemFonts.CreateFont("Arial", fontSize);
-
-            var padding = 20;
-
-            // Estimăm dimensiunea textului (aproximativ)
-            float estimatedWidth = text.Length * fontSize * 0.6f;
-            float estimatedHeight = fontSize * 1.2f;
-
-            float x = 0, y = 0;
-
-            switch (position.ToLower())
+            try
             {
-                case "topleft":
-                    x = padding;
-                    y = padding;
-                    break;
-                case "topcenter":
-                    x = (img.Width - estimatedWidth) / 2;
-                    y = padding;
-                    break;
-                case "topright":
-                    x = img.Width - estimatedWidth - padding;
-                    y = padding;
-                    break;
-                case "center":
-                    x = (img.Width - estimatedWidth) / 2;
-                    y = (img.Height - estimatedHeight) / 2;
-                    break;
-                case "bottomleft":
-                    x = padding;
-                    y = img.Height - estimatedHeight - padding;
-                    break;
-                case "bottomcenter":
-                    x = (img.Width - estimatedWidth) / 2;
-                    y = img.Height - estimatedHeight - padding;
-                    break;
-                case "bottomright":
-                default:
-                    x = img.Width - estimatedWidth - padding;
-                    y = img.Height - estimatedHeight - padding;
-                    break;
+                var userId = _baseService.GetUserId();
+                var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
+                    image,
+                    userId,
+                    6, // tipProcesareId pentru watermark
+                    async img =>
+                    {
+                        var font = SystemFonts.CreateFont("Arial", fontSize);
+                        var padding = 20;
+                        float estimatedWidth = text.Length * fontSize * 0.6f;
+                        float estimatedHeight = fontSize * 1.2f;
+
+                        float x = 0, y = 0;
+
+                        switch (position?.ToLower())
+                        {
+                            case "topleft":
+                                x = padding;
+                                y = padding;
+                                break;
+                            case "topcenter":
+                                x = (img.Width - estimatedWidth) / 2;
+                                y = padding;
+                                break;
+                            case "topright":
+                                x = img.Width - estimatedWidth - padding;
+                                y = padding;
+                                break;
+                            case "center":
+                                x = (img.Width - estimatedWidth) / 2;
+                                y = (img.Height - estimatedHeight) / 2;
+                                break;
+                            case "bottomleft":
+                                x = padding;
+                                y = img.Height - estimatedHeight - padding;
+                                break;
+                            case "bottomcenter":
+                                x = (img.Width - estimatedWidth) / 2;
+                                y = img.Height - estimatedHeight - padding;
+                                break;
+                            case "bottomright":
+                            default:
+                                x = img.Width - estimatedWidth - padding;
+                                y = img.Height - estimatedHeight - padding;
+                                break;
+                        }
+
+                        var baseColor = Color.Parse(color);
+                        var colorWithOpacity = baseColor.WithAlpha(opacity / 100f);
+
+                        img.Mutate(ctx =>
+                        {
+                            ctx.DrawText(text, font, colorWithOpacity, new PointF(x, y));
+                        });
+
+                        await Task.CompletedTask;
+                    }
+                );
+
+                return File(imageBytes, "image/png", $"watermarked-{DateTime.Now.Ticks}.png");
             }
-
-            // Parsăm culoarea și aplicăm opacitatea
-            var baseColor = Color.Parse(color);
-            var colorWithOpacity = baseColor.WithAlpha(opacity / 100f);
-
-            img.Mutate(ctx =>
+            catch (Exception ex)
             {
-                ctx.DrawText(text, font, colorWithOpacity, new PointF(x, y));
-            });
+                return BadRequest($"Eroare la watermark: {ex.Message}");
+            }
+        }
 
-            using var ms = new MemoryStream();
-            await img.SaveAsync(ms, new PngEncoder());
-            ms.Position = 0;
+        [HttpPost("transfer-colors")]
+        [Consumes("multipart/form-data")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+        public async Task<IActionResult> TransferColors(
+            [FromForm] IFormFile sourceImage,
+            [FromForm] IFormFile referenceImage)
+        {
+            if (sourceImage == null || sourceImage.Length == 0)
+                return BadRequest("Nu a fost selectată imaginea sursă.");
 
-            return File(ms.ToArray(), "image/png", $"watermarked-{DateTime.Now.Ticks}.png");
+            if (referenceImage == null || referenceImage.Length == 0)
+                return BadRequest("Nu a fost selectată imaginea de referință.");
+
+            try
+            {
+                var userId = _baseService.GetUserId();
+                using var reference = await Image.LoadAsync<Rgba32>(referenceImage.OpenReadStream());
+                var refStats = ColorHelper.GetColorStatistics(reference);
+
+                var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
+                    sourceImage,
+                    userId,
+                    7, // tipProcesareId pentru transfer-colors
+                    async img =>
+                    {
+                        using var source = img as Image<Rgba32> ?? img.CloneAs<Rgba32>();
+                        source.Mutate(x => x.BackgroundColor(Color.White));
+
+                        var srcStats = ColorHelper.GetColorStatistics(source);
+                        source.Mutate(ctx =>
+                            ctx.ProcessPixelRowsAsVector4(row =>
+                            {
+                                for (int i = 0; i < row.Length; i++)
+                                {
+                                    Vector4 v = row[i];
+                                    float r = v.X;
+                                    float g = v.Y;
+                                    float b = v.Z;
+                                    float newR = ColorHelper.MapColorChannel(r, srcStats.MeanR, refStats.MeanR, srcStats.StdR, refStats.StdR);
+                                    float newG = ColorHelper.MapColorChannel(g, srcStats.MeanG, refStats.MeanG, srcStats.StdG, refStats.StdG);
+                                    float newB = ColorHelper.MapColorChannel(b, srcStats.MeanB, refStats.MeanB, srcStats.StdB, refStats.StdB);
+                                    row[i] = new Vector4(newR, newG, newB, v.W);
+                                }
+                            })
+                        );
+                        await Task.CompletedTask;
+                    }
+                );
+
+                return File(imageBytes, "image/png", $"color-transfer-{DateTime.Now.Ticks}.png");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Eroare la transfer-colors: {ex.Message}");
+            }
         }
     }
 }

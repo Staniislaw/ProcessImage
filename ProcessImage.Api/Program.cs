@@ -88,7 +88,6 @@ foreach (var startup in startups)
     startup.Configure(app, app.Environment);
 }
 
-// Corectarea rutelor
 app.MapControllerRoute(
     name: "areaRoute",
     pattern: "{area:exists}/{controller=Auth}/{action=Login}/{id?}");
@@ -96,6 +95,5 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
 app.MapFallbackToFile("index.html");
 app.Run();
