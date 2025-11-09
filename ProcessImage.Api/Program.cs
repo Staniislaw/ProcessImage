@@ -7,8 +7,14 @@ using ProcessImage.Infrastructure;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using log4net.Config;
+using log4net;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
 // Configurare JWT (doar pentru API)
 builder.Configuration["Jwt:Key"] = "my_super_secret_key_that_is_long_enough_for_jwt_256_bits_minimum!";

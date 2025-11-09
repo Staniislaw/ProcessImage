@@ -14,6 +14,8 @@ using ProcessImage.Services;
 using ProcessImage.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using ProcessImage.Helpers;
+using ProcessImage.Models.Enum;
 
 namespace ProcessImage.Controllers
 {
@@ -41,10 +43,10 @@ namespace ProcessImage.Controllers
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectată nicio imagine.");
-
+            var userId = _baseService.GetUserId();
+            string userEmail = _baseService.GetUserEmail();
             try
             {
-                var userId = _baseService.GetUserId();
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
@@ -62,6 +64,12 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
+                LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
+                    userEmail,
+                    userId,
+                    LoggerTypeEnum.Error,
+                    $"Eroare la procesare: {ex.Message}"
+                );
                 return BadRequest($"Eroare la resize: {ex.Message}");
             }
         }
@@ -76,10 +84,10 @@ namespace ProcessImage.Controllers
                 return BadRequest("Nu a fost selectata nicio imagine.");
             if (width <= 0 || height <= 0)
                 return BadRequest("Latimea si inaltimea trebuie să fie pozitive.");
-
+            var userId = _baseService.GetUserId();
+            string userEmail = _baseService.GetUserEmail();
             try
             {
-                var userId = _baseService.GetUserId();
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
@@ -98,6 +106,12 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
+                LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
+                    userEmail,
+                    userId,
+                    LoggerTypeEnum.Error,
+                    $"Eroare la procesare: {ex.Message}"
+                );
                 return BadRequest($"Eroare la crop: {ex.Message}");
             }
         }
@@ -110,10 +124,10 @@ namespace ProcessImage.Controllers
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectata nicio imagine.");
-
+            var userId = _baseService.GetUserId();
+            string userEmail = _baseService.GetUserEmail();
             try
             {
-                var userId = _baseService.GetUserId();
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
@@ -129,6 +143,12 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
+                LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
+                    userEmail,
+                    userId,
+                    LoggerTypeEnum.Error,
+                    $"Eroare la procesare: {ex.Message}"
+                );
                 return BadRequest($"Eroare la rotate: {ex.Message}");
             }
         }
@@ -141,10 +161,10 @@ namespace ProcessImage.Controllers
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectata nicio imagine.");
-
+            var userId = _baseService.GetUserId();
+            string userEmail = _baseService.GetUserEmail();
             try
             {
-                var userId = _baseService.GetUserId();
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
@@ -182,6 +202,12 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
+                LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
+                    userEmail,
+                    userId,
+                    LoggerTypeEnum.Error,
+                    $"Eroare la procesare: {ex.Message}"
+                );
                 return BadRequest($"Eroare la filter: {ex.Message}");
             }
         }
@@ -194,10 +220,10 @@ namespace ProcessImage.Controllers
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectata nicio imagine.");
-
+            var userId = _baseService.GetUserId();
+            string userEmail = _baseService.GetUserEmail();
             try
             {
-                var userId = _baseService.GetUserId();
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
@@ -218,6 +244,12 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
+                LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
+                    userEmail,
+                    userId,
+                    LoggerTypeEnum.Error,
+                    $"Eroare la procesare: {ex.Message}"
+                );
                 return BadRequest($"Eroare la compress: {ex.Message}");
             }
         }
@@ -239,10 +271,11 @@ namespace ProcessImage.Controllers
 
             if (string.IsNullOrEmpty(text))
                 return BadRequest("Textul nu poate fi gol.");
-
+            var userId = _baseService.GetUserId();
+            string userEmail = _baseService.GetUserEmail();
             try
             {
-                var userId = _baseService.GetUserId();
+                
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
@@ -305,6 +338,12 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
+                LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
+                    userEmail,
+                    userId,
+                    LoggerTypeEnum.Error,
+                    $"Eroare la procesare: {ex.Message}"
+                );
                 return BadRequest($"Eroare la watermark: {ex.Message}");
             }
         }
@@ -313,19 +352,18 @@ namespace ProcessImage.Controllers
         [Consumes("multipart/form-data")]
         [ApiExplorerSettings(IgnoreApi = true)]
         [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
-        public async Task<IActionResult> TransferColors(
-            [FromForm] IFormFile sourceImage,
-            [FromForm] IFormFile referenceImage)
+        public async Task<IActionResult> TransferColors([FromForm] IFormFile sourceImage,[FromForm] IFormFile referenceImage)
         {
             if (sourceImage == null || sourceImage.Length == 0)
                 return BadRequest("Nu a fost selectata imaginea sursa.");
 
             if (referenceImage == null || referenceImage.Length == 0)
                 return BadRequest("Nu a fost selectata imaginea de referintă.");
-
+            var userId = _baseService.GetUserId();
+            string userEmail = _baseService.GetUserEmail();
+            
             try
             {
-                var userId = _baseService.GetUserId();
                 using var reference = await Image.LoadAsync<Rgba32>(referenceImage.OpenReadStream());
                 var refStats = ColorHelper.GetColorStatistics(reference);
 
@@ -356,11 +394,18 @@ namespace ProcessImage.Controllers
                         await Task.CompletedTask;
                     }
                 );
-
+                
                 return File(imageBytes, "image/png", $"color-transfer-{DateTime.Now.Ticks}.png");
             }
             catch (Exception ex)
             {
+                LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
+                    userEmail,
+                    userId,
+                    LoggerTypeEnum.Error,
+                    $"Eroare la procesare: {ex.Message}"
+                );
+
                 return BadRequest($"Eroare la transfer-colors: {ex.Message}");
             }
         }
