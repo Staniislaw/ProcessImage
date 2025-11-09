@@ -35,13 +35,13 @@ namespace ProcessImage.Controllers
 
             var utilizatorExistent = await _utilizatorRepository.GetAsync(u => u.Email == request.Email);
             if (utilizatorExistent != null)
-                return BadRequest(new { message = "Utilizatorul cu acest email există deja" });
+                return BadRequest(new { message = "Utilizatorul cu acest email exista deja" });
 
             var subscriptieFree = await _subscriptieRepository.GetAsync(s => s.Tip == "Free");
 
             if (subscriptieFree == null)
             {
-                return StatusCode(500, new { message = "Subscripția Free nu este configurată în sistem" });
+                return StatusCode(500, new { message = "Subscriptia Free nu este configurata în sistem" });
             }
 
             var parolaHashata = BCrypt.Net.BCrypt.HashPassword(request.Parola);
@@ -58,14 +58,14 @@ namespace ProcessImage.Controllers
                 var result = await _utilizatorRepository.AddAsync(utilizator);
                 return Ok(new
                 {
-                    message = "Utilizator înregistrat cu succes",
+                    message = "Utilizator inregistrat cu succes",
                     utilizatorId = result.Id,
                     subscriptie = subscriptieFree.Tip
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "A apărut o eroare la înregistrare", details = ex.Message });
+                return StatusCode(500, new { message = "A aparut o eroare la inregistrare", details = ex.Message });
             }
         }
 
@@ -77,18 +77,18 @@ namespace ProcessImage.Controllers
 
             var utilizator = await _utilizatorRepository.GetAsync(u => u.Email == request.Email);
             if (utilizator == null)
-                return Unauthorized(new { message = "Email sau parolă incorectă" });
+                return Unauthorized(new { message = "Email sau parola incorecta" });
             var isValid = BCrypt.Net.BCrypt.Verify(request.Parola, utilizator.Parola);
             Console.WriteLine($"Verify rezultat: {isValid}");
 
             if (!BCrypt.Net.BCrypt.Verify(request.Parola, utilizator.Parola))
-                return Unauthorized(new { message = "Email sau parolă incorectă" });
+                return Unauthorized(new { message = "Email sau parola incorecta" });
 
             var token = GenerateJwtToken(utilizator);
 
             return Ok(new
             {
-                message = "Logare reușită",
+                message = "Logare reusita",
                 token = token,
                 utilizator = new
                 {
@@ -99,7 +99,6 @@ namespace ProcessImage.Controllers
             });
         }
 
-        // UtilizatorController.cs (sau AuthController.cs)
         [HttpGet("profil")]
         public async Task<IActionResult> GetProfil()
         {
@@ -107,7 +106,7 @@ namespace ProcessImage.Controllers
 
             var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == userId);
             if (utilizator == null)
-                return NotFound(new { message = "Utilizator nu găsit" });
+                return NotFound(new { message = "Utilizator nu gasit" });
 
             return Ok(new
             {
@@ -133,7 +132,7 @@ namespace ProcessImage.Controllers
                     asNoTracking: true,
                     u => u.Subscriptie);
             if (utilizator == null)
-                return NotFound(new { message = "Utilizator nu găsit" });
+                return NotFound(new { message = "Utilizator nu gasit" });
 
             utilizator.Nume = request.Nume ?? utilizator.Nume;
             await _utilizatorRepository.UpdateAsync(utilizator);
@@ -156,15 +155,15 @@ namespace ProcessImage.Controllers
                 asNoTracking: true,
                 u => u.Subscriptie);
             if (utilizator == null)
-                return NotFound(new { message = "Utilizator nu găsit" });
+                return NotFound(new { message = "Utilizator nu gasit" });
 
             if (!BCrypt.Net.BCrypt.Verify(request.ParolaVeche, utilizator.Parola))
-                return BadRequest(new { message = "Parola veche incorectă" });
+                return BadRequest(new { message = "Parola veche incorecta" });
 
             utilizator.Parola = BCrypt.Net.BCrypt.HashPassword(request.ParolaNoua);
             await _utilizatorRepository.UpdateAsync(utilizator);
 
-            return Ok(new { message = "Parola schimbată cu succes" });
+            return Ok(new { message = "Parola schimbata cu succes" });
         }
 
         private string GenerateJwtToken(Utilizator utilizator)

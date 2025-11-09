@@ -20,7 +20,6 @@ public class AuthController : Controller
     [HttpGet]
     public IActionResult Login()
     {
-        // Verifică dacă utilizatorul este deja autentificat ca Admin
         if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
         {
             return RedirectToAction("Index", "DashboardAdmin", new { area = "Admin" });
@@ -32,12 +31,10 @@ public class AuthController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(AdminLoginViewModel model)
     {
-        // Debug: verifică ce date vin
         Console.WriteLine($"Email: {model?.Email}, Parola: {model?.Parola}");
 
         if (!ModelState.IsValid)
         {
-            // Afișează erorile de model
             foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
             {
                 Console.WriteLine($"Model error: {error.ErrorMessage}");
@@ -63,8 +60,6 @@ public class AuthController : Controller
                 ModelState.AddModelError("", "Email sau parolă incorectă");
                 return View(model);
             }
-
-            // Verifică parola
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(model.Parola, utilizator.Parola);
             if (!isPasswordValid)
             {
@@ -77,8 +72,6 @@ public class AuthController : Controller
                 ModelState.AddModelError("", "Nu aveți permisiuni de administrator");
                 return View(model);
             }
-
-            // Creare claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, utilizator.Id.ToString()),
@@ -93,12 +86,10 @@ public class AuthController : Controller
                 IsPersistent = model.RememberMe,
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24)
             };
-
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
-
             return RedirectToAction("Index", "DashboardAdmin", new { area = "Admin" });
         }
         catch (Exception ex)

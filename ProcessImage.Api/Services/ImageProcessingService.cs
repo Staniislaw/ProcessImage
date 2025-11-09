@@ -60,7 +60,7 @@ namespace ProcessImage.Services
         public async Task<byte[]> ProcessAndSaveImageAsync(IFormFile image,long utilizatorId,long tipProcesareId,Func<Image, Task> processFunc)
         {
             if (image == null || image.Length == 0)
-                throw new ArgumentException("Nu a fost selectată nicio imagine.");
+                throw new ArgumentException("Nu a fost selectata nicio imagine.");
             long imagineId = 0;
             try
             {

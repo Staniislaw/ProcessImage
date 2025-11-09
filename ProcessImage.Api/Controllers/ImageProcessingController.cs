@@ -73,9 +73,9 @@ namespace ProcessImage.Controllers
         public async Task<IActionResult> Crop([FromForm] IFormFile image, [FromForm] int x, [FromForm] int y, [FromForm] int width, [FromForm] int height)
         {
             if (image == null || image.Length == 0)
-                return BadRequest("Nu a fost selectată nicio imagine.");
+                return BadRequest("Nu a fost selectata nicio imagine.");
             if (width <= 0 || height <= 0)
-                return BadRequest("Lățimea și înălțimea trebuie să fie pozitive.");
+                return BadRequest("Latimea si inaltimea trebuie să fie pozitive.");
 
             try
             {
@@ -109,7 +109,7 @@ namespace ProcessImage.Controllers
         public async Task<IActionResult> Rotate([FromForm] IFormFile image, [FromForm] float angle)
         {
             if (image == null || image.Length == 0)
-                return BadRequest("Nu a fost selectată nicio imagine.");
+                return BadRequest("Nu a fost selectata nicio imagine.");
 
             try
             {
@@ -117,7 +117,7 @@ namespace ProcessImage.Controllers
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    3, // tipProcesareId pentru rotate
+                    1, // tipProcesareId pentru rotate
                     async img =>
                     {
                         img.Mutate(i => i.Rotate(angle));
@@ -140,7 +140,7 @@ namespace ProcessImage.Controllers
         public async Task<IActionResult> Filter([FromForm] IFormFile image, [FromForm] string filterType, [FromForm] int intensity)
         {
             if (image == null || image.Length == 0)
-                return BadRequest("Nu a fost selectată nicio imagine.");
+                return BadRequest("Nu a fost selectata nicio imagine.");
 
             try
             {
@@ -148,7 +148,7 @@ namespace ProcessImage.Controllers
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    4, // tipProcesareId pentru filter
+                    3, // tipProcesareId pentru filter
                     async img =>
                     {
                         switch (filterType?.ToLower())
@@ -193,7 +193,7 @@ namespace ProcessImage.Controllers
         public async Task<IActionResult> Compress([FromForm] IFormFile image, [FromForm] int quality)
         {
             if (image == null || image.Length == 0)
-                return BadRequest("Nu a fost selectată nicio imagine.");
+                return BadRequest("Nu a fost selectata nicio imagine.");
 
             try
             {
@@ -201,10 +201,9 @@ namespace ProcessImage.Controllers
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    5, // tipProcesareId pentru compress
+                    4, // tipProcesareId pentru compress
                     async img =>
                     {
-                        // Compress se salvează ca JPEG
                         using var ms = new MemoryStream();
                         await img.SaveAsync(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
                         {
@@ -236,7 +235,7 @@ namespace ProcessImage.Controllers
             [FromForm] int opacity = 50)
         {
             if (image == null || image.Length == 0)
-                return BadRequest("Nu a fost selectată nicio imagine.");
+                return BadRequest("Nu a fost selectata nicio imagine.");
 
             if (string.IsNullOrEmpty(text))
                 return BadRequest("Textul nu poate fi gol.");
@@ -319,10 +318,10 @@ namespace ProcessImage.Controllers
             [FromForm] IFormFile referenceImage)
         {
             if (sourceImage == null || sourceImage.Length == 0)
-                return BadRequest("Nu a fost selectată imaginea sursă.");
+                return BadRequest("Nu a fost selectata imaginea sursa.");
 
             if (referenceImage == null || referenceImage.Length == 0)
-                return BadRequest("Nu a fost selectată imaginea de referință.");
+                return BadRequest("Nu a fost selectata imaginea de referintă.");
 
             try
             {
@@ -333,10 +332,10 @@ namespace ProcessImage.Controllers
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     sourceImage,
                     userId,
-                    7, // tipProcesareId pentru transfer-colors
+                    10003, 
                     async img =>
                     {
-                        using var source = img as Image<Rgba32> ?? img.CloneAs<Rgba32>();
+                        var source = img as Image<Rgba32> ?? img.CloneAs<Rgba32>();
                         source.Mutate(x => x.BackgroundColor(Color.White));
 
                         var srcStats = ColorHelper.GetColorStatistics(source);
@@ -346,16 +345,14 @@ namespace ProcessImage.Controllers
                                 for (int i = 0; i < row.Length; i++)
                                 {
                                     Vector4 v = row[i];
-                                    float r = v.X;
-                                    float g = v.Y;
-                                    float b = v.Z;
-                                    float newR = ColorHelper.MapColorChannel(r, srcStats.MeanR, refStats.MeanR, srcStats.StdR, refStats.StdR);
-                                    float newG = ColorHelper.MapColorChannel(g, srcStats.MeanG, refStats.MeanG, srcStats.StdG, refStats.StdG);
-                                    float newB = ColorHelper.MapColorChannel(b, srcStats.MeanB, refStats.MeanB, srcStats.StdB, refStats.StdB);
+                                    float newR = ColorHelper.MapColorChannel(v.X, srcStats.MeanR, refStats.MeanR, srcStats.StdR, refStats.StdR);
+                                    float newG = ColorHelper.MapColorChannel(v.Y, srcStats.MeanG, refStats.MeanG, srcStats.StdG, refStats.StdG);
+                                    float newB = ColorHelper.MapColorChannel(v.Z, srcStats.MeanB, refStats.MeanB, srcStats.StdB, refStats.StdB);
                                     row[i] = new Vector4(newR, newG, newB, v.W);
                                 }
                             })
                         );
+
                         await Task.CompletedTask;
                     }
                 );

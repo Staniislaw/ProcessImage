@@ -26,9 +26,8 @@ namespace ProcessImage.Infrastructure
 
                 if (useLazyLoading)
                 {
-                    options.UseLazyLoadingProxies(); // activează Lazy Loading
+                    options.UseLazyLoadingProxies();
                 }
-                // dacă false → nu activăm proxy-uri, deci Eager Loading
             });
 
             /*services.AddDbContext<PpawContext>(options =>

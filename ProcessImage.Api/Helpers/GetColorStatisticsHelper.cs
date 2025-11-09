@@ -23,8 +23,6 @@
                 var stats = new ColorStatistics();
                 float sumR = 0, sumG = 0, sumB = 0;
                 long pixelCount = 0;
-
-                // Prima trecere: calculează media
                 image.ProcessPixelRows(accessor =>
                 {
                     for (int y = 0; y < accessor.Height; y++)

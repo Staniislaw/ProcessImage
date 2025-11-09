@@ -75,8 +75,8 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eroare la încarcarea datelor create: {ex.Message}");
-                ModelState.AddModelError("", "Eroare la încarcarea datelor");
+                Console.WriteLine($"Eroare la incarcarea datelor create: {ex.Message}");
+                ModelState.AddModelError("", "Eroare la incarcarea datelor");
                 return View();
             }
         }

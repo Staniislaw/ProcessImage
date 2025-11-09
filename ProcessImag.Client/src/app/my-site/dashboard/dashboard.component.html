@@ -1,53 +1,137 @@
-<div class="flex flex-col gap-6 p-6">
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p class="text-muted-foreground">Welcome back! Here's an overview of your metrics.</p>
-      </div>
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Dashboard Procesări</h1>
+    <p>Analiza fișierelor și procesărilor în timp real</p>
+  </div>
 
-      <!-- Stats Grid -->
-      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div *ngFor="let stat of stats" class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6">
-            <div class="flex items-center justify-between space-y-0 pb-2">
-              <h3 class="text-sm font-medium">{{ stat.title }}</h3>
-              <span [innerHTML]="stat.icon" class="h-4 w-4 text-muted-foreground"></span>
-            </div>
-            <div class="text-2xl font-bold">{{ stat.value }}</div>
-            <p class="text-xs text-muted-foreground">{{ stat.change }}</p>
-          </div>
-        </div>
-      </div>
+  <!-- Loading Spinner -->
+  <mat-spinner *ngIf="isLoading" diameter="50" class="spinner-center"></mat-spinner>
 
-      <!-- Charts Grid -->
-      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div class="col-span-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6">
-            <h3 class="text-lg font-semibold mb-2">Overview</h3>
-            <p class="text-sm text-muted-foreground mb-4">Your performance over the last 6 months</p>
-            <div class="h-[300px] flex items-center justify-center">
-              <p class="text-muted-foreground">Chart visualization area</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-span-3 rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6">
-            <h3 class="text-lg font-semibold mb-2">Recent Activity</h3>
-            <p class="text-sm text-muted-foreground mb-4">Latest updates and notifications</p>
-            <div class="space-y-4">
-              <div *ngFor="let i of [1,2,3,4]" class="flex items-center gap-4">
-                <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                    <path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>
-                  </svg>
-                </div>
-                <div class="flex-1 space-y-1">
-                  <p class="text-sm font-medium leading-none">Activity {{ i }}</p>
-                  <p class="text-sm text-muted-foreground">Description of the activity</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+  <!-- Stats Grid - Data binding from stats array -->
+  <div class="stats-grid">
+    <div *ngFor="let stat of stats" class="stats-card" [ngClass]="'color-' + stat.color">
+      <div class="card-header">
+        <h3>{{ stat.label }}</h3>
+        <mat-icon class="stat-icon">{{ stat.icon }}</mat-icon>
       </div>
+      <div class="card-value">{{ stat.value }}</div>
     </div>
+  </div>
+
+  <!-- Processing Table -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <mat-icon>bolt</mat-icon>
+      <h2>Procesări Recente</h2>
+    </div>
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="processingData" class="processing-table">
+
+        <!-- ID Column -->
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let element">#{{ element.id }}</td>
+        </ng-container>
+
+        <!-- Imagine ID Column -->
+        <ng-container matColumnDef="imagineId">
+          <th mat-header-cell *matHeaderCellDef>Imagine ID</th>
+          <td mat-cell *matCellDef="let element">#IMG-{{ element.imagineId }}</td>
+        </ng-container>
+
+        <!-- Tip Procesare Column -->
+        <ng-container matColumnDef="tipProcesare">
+          <th mat-header-cell *matHeaderCellDef>Tip Procesare</th>
+          <td mat-cell *matCellDef="let element">{{ element.tipProcesare }}</td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let element">
+            <div class="status-indicator">
+              <span class="status-dot" [ngClass]="'status-' + element.status.toLowerCase()"></span>
+              <span class="chip" [ngClass]="getStatusChipClass(element.status)">
+                <mat-icon class="chip-icon">{{ getStatusIcon(element.status) }}</mat-icon>
+                {{ element.status }}
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Data Procesare Column -->
+        <ng-container matColumnDef="dataProcesare">
+          <th mat-header-cell *matHeaderCellDef>Data Procesare</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="icon-text">
+              <mat-icon>schedule</mat-icon>
+              {{ element.dataProcesare }}
+            </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="processingColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: processingColumns;"></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Files Table -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <mat-icon>image</mat-icon>
+      <h2>Fișierele Încărcate</h2>
+    </div>
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="filesData" class="files-table">
+
+        <!-- ID Column -->
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let element">#{{ element.id }}</td>
+        </ng-container>
+
+        <!-- Nume Column -->
+        <ng-container matColumnDef="nume">
+          <th mat-header-cell *matHeaderCellDef>Nume Fișier</th>
+          <td mat-cell *matCellDef="let element" class="file-name" [title]="element.nume">
+            {{ element.nume }}
+          </td>
+        </ng-container>
+
+        <!-- Tip Column -->
+        <ng-container matColumnDef="tip">
+          <th mat-header-cell *matHeaderCellDef>Tip</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="chip file-type-chip">{{ element.tip }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Utilizator ID Column -->
+        <ng-container matColumnDef="utilizatorId">
+          <th mat-header-cell *matHeaderCellDef>Utilizator</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="user-id">
+              <mat-icon>person</mat-icon>
+              User #{{ element.utilizatorId }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Data Incarcarii Column -->
+        <ng-container matColumnDef="dataIncarcarii">
+          <th mat-header-cell *matHeaderCellDef>Data Încărcării</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="icon-text">
+              <mat-icon>schedule</mat-icon>
+              {{ element.dataIncarcarii }}
+            </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="filesColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: filesColumns;"></tr>
+      </table>
+    </div>
+  </div>
+</div>

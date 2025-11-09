@@ -15,18 +15,15 @@ namespace ProcessImage.Controllers
     {
         private readonly IRepository<Subscriptie> _subscriptieRepository;
         private readonly IRepository<Utilizator> _utilizatorRepository;
-        private readonly IRepository<SubscripteProcesare> _subscriptieProcesareRepository;
         private readonly IRepository<TipProcesare> _tipProcesareRepository;
         private readonly IBaseService _baseService;
         public SubscriptionsController(
             IRepository<Subscriptie> subscriptieRepository,
-            IRepository<SubscripteProcesare> subscriptieProcesareRepository,
             IRepository<TipProcesare> tipProcesareRepository,
             IRepository<Utilizator> utilizatorRepository,
             IBaseService baseService)
         {
             _subscriptieRepository = subscriptieRepository;
-            _subscriptieProcesareRepository = subscriptieProcesareRepository;
             _tipProcesareRepository = tipProcesareRepository;
             _utilizatorRepository = utilizatorRepository;
             _baseService = baseService;
@@ -74,7 +71,7 @@ namespace ProcessImage.Controllers
 
                 if (subscription == null)
                 {
-                    return NotFound(new { message = $"Abonamentul cu ID-ul {id} nu a fost găsit." });
+                    return NotFound(new { message = $"Abonamentul cu ID-ul {id} nu a fost gasit." });
                 }
 
                 return Ok(subscription);
@@ -102,7 +99,7 @@ namespace ProcessImage.Controllers
 
                 if (subscription == null)
                 {
-                    return NotFound(new { message = $"Abonamentul de tip '{tip}' nu a fost găsit." });
+                    return NotFound(new { message = $"Abonamentul de tip '{tip}' nu a fost gasit." });
                 }
 
                 return Ok(subscription);
@@ -125,7 +122,7 @@ namespace ProcessImage.Controllers
 
                 if (processingTypes == null || !processingTypes.Any())
                 {
-                    return NotFound(new { message = "Nu au fost găsite tipuri de procesare." });
+                    return NotFound(new { message = "Nu au fost gasite tipuri de procesare." });
                 }
 
                 return Ok(processingTypes);
@@ -154,7 +151,7 @@ namespace ProcessImage.Controllers
 
                 if (subscription == null)
                 {
-                    return NotFound(new { message = $"Abonamentul cu ID-ul {id} nu a fost găsit." });
+                    return NotFound(new { message = $"Abonamentul cu ID-ul {id} nu a fost gasit." });
                 }
 
                 var limits = subscription.SubscripteProcesares.Select(sp => new
@@ -164,7 +161,7 @@ namespace ProcessImage.Controllers
                     LimitaMax = sp.LimitaMax,
                     EsteLimitat = sp.LimitaMax.HasValue,
                     Descriere = sp.LimitaMax.HasValue
-                        ? $"Limită de {sp.LimitaMax} procesări pe lună"
+                        ? $"Limita de {sp.LimitaMax} procesari pe zi"
                         : "Nelimitat"
                 }).ToList();
                 return Ok(new
@@ -236,11 +233,11 @@ namespace ProcessImage.Controllers
             }
             var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == utilizatorId);
             if (utilizator == null)
-                return NotFound(new { message = "Utilizator nu găsit" });
+                return NotFound(new { message = "Utilizator nu gasit" });
 
             var subscriptie = await _subscriptieRepository.GetAsync(s => s.Id == id);
             if (subscriptie == null)
-                return NotFound(new { message = "Abonamentul selectat nu există" });
+                return NotFound(new { message = "Abonamentul selectat nu exista" });
 
             utilizator.SubscriptieId = subscriptie.Id;
             await _utilizatorRepository.UpdateAsync(utilizator);

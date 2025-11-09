@@ -21,6 +21,7 @@ bootstrapApplication(AppComponent, {
       closeButton: true,
       newestOnTop: true,
       tapToDismiss: true
-    })
+    }),
+    provideAnimations(),
   ]
 });

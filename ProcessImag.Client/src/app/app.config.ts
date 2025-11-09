@@ -4,6 +4,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/authInterceptor';
+import { provideAnimations } from '@angular/platform-browser/animations';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withDebugTracing()), // router cu debug tracing
@@ -11,6 +12,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([authInterceptor])
     ),
-
+    provideAnimations(),
   ]
 };
