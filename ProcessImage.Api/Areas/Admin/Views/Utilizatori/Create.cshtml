@@ -205,13 +205,13 @@
 
             <div class="password-group">
                 <div class="form-group">
-                    <label asp-for="Parola">Parolă</label>
+                    <label asp-for="Parola">Parola</label>
                     <input type="password" name="Parola" placeholder="Introduceți parola...">
                     <span class="validation-message" asp-validation-for="Parola"></span>
                 </div>
 
                 <div class="form-group">
-                    <label asp-for="ConfirmaParola">Confirmă Parola</label>
+                    <label asp-for="ConfirmaParola">Confirma Parola</label>
                     <input type="password" name="ConfirmaParola" placeholder="Confirmați parola...">
                     <span class="validation-message" asp-validation-for="ConfirmaParola"></span>
                 </div>
@@ -219,45 +219,31 @@
 
             <div class="form-group">
                 <label asp-for="RolId">Rol</label>
-                <select name="RolId" class="form-control">
-                    <option value="">-- Selectează rolul --</option>
-                    @if (ViewBag.Roles != null)
+                <select id="RolId" name="RolId">
+                    <option value="">-- Selecteaza rolul --</option>
+                    @foreach (var rol in Model.Roluri)
                     {
-                        @foreach (var role in ViewBag.Roles)
-                        {
-                            <option value="@role.Id">@role.NumeRol</option>
-                        }
-                    }
-                    else
-                    {
-                        <option disabled>Nu sunt disponibile roluri</option>
+                        <option value="@rol.Value">@rol.Text</option>
                     }
                 </select>
-                <span class="validation-message" asp-validation-for="RolId"></span>
+                <span asp-validation-for="RolId" class="validation-message"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="SubscriptieId">Subscripție</label>
-                <select name="SubscriptieId" class="form-control">
-                    <option value="">-- Selectează subscripția --</option>
-                    @if (ViewBag.Subscriptions != null)
+                <label asp-for="SubscriptieId">Subscriptie</label>
+                <select id="SubscriptieId" name="SubscriptieId">
+                    <option value="">-- Selecteaza subscriptia --</option>
+                    @foreach (var subscriptie in Model.Subscriptii)
                     {
-                        @foreach (var subscription in ViewBag.Subscriptions)
-                        {
-                            <option value="@subscription.Id">@subscription.Tip - @subscription.Pret RON</option>
-                        }
-                    }
-                    else
-                    {
-                        <option disabled>Nu sunt disponibile subscripții</option>
+                        <option value="@subscriptie.Value">@subscriptie.Text</option>
                     }
                 </select>
-                <span class="validation-message" asp-validation-for="SubscriptieId"></span>
+                <span asp-validation-for="SubscriptieId" class="validation-message"></span>
             </div>
 
             <div class="form-actions">
                 <a href="/Admin/Utilizatori/Index" class="btn btn-cancel">
-                    <i class="fas fa-times"></i> Anulează
+                    <i class="fas fa-times"></i> Anuleaza
                 </a>
                 <button type="submit" class="btn btn-submit">
                     <i class="fas fa-save"></i> Crează Utilizator

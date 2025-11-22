@@ -45,12 +45,19 @@ namespace ProcessImage.Controllers
                 return BadRequest("Nu a fost selectată nicio imagine.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
+            var TipProcesare = await _imageProcessingService.GetTipProcesareId();
+            var tipProcesareResize = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Resize.ToString());
+            if (tipProcesareResize == null)
+            {
+                throw new InvalidOperationException($"TipProcesare pentru '{TipProcesareEnum.Resize.ToString()}' nu a fost gasit!");
+
+            }
             try
             {
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    1, // tipProcesareId pentru resize
+                    tipProcesareResize.Id, // tipProcesareId pentru resize
                     async img =>
                     {
                         int width = (int)(img.Width * (scale / 100.0));
@@ -86,12 +93,20 @@ namespace ProcessImage.Controllers
                 return BadRequest("Latimea si inaltimea trebuie să fie pozitive.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
+
+            var TipProcesare = await _imageProcessingService.GetTipProcesareId();
+            var tipProcesareCrop = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Crop.ToString());
+            if (tipProcesareCrop == null)
+            {
+                throw new InvalidOperationException($"TipProcesare pentru '{TipProcesareEnum.Crop.ToString()}' nu a fost gasit!");
+
+            }
             try
             {
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    2, // tipProcesareId pentru crop
+                    tipProcesareCrop.Id, // tipProcesareId pentru crop
                     async img =>
                     {
                         if (x < 0 || y < 0 || x + width > img.Width || y + height > img.Height)
@@ -126,12 +141,19 @@ namespace ProcessImage.Controllers
                 return BadRequest("Nu a fost selectata nicio imagine.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
+            var TipProcesare = await _imageProcessingService.GetTipProcesareId();
+            var tipProcesareRotate = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Rotate.ToString());
+            if (tipProcesareRotate == null)
+            {
+                throw new InvalidOperationException($"TipProcesare pentru '{TipProcesareEnum.Rotate.ToString()}' nu a fost gasit!");
+
+            }
             try
             {
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    1, // tipProcesareId pentru rotate
+                    tipProcesareRotate.Id, // tipProcesareId pentru rotate
                     async img =>
                     {
                         img.Mutate(i => i.Rotate(angle));
@@ -163,12 +185,19 @@ namespace ProcessImage.Controllers
                 return BadRequest("Nu a fost selectata nicio imagine.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
+            var TipProcesare = await _imageProcessingService.GetTipProcesareId();
+            var tipProcesareFilter = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Filter.ToString());
+            if (tipProcesareFilter == null)
+            {
+                throw new InvalidOperationException($"TipProcesare pentru '{TipProcesareEnum.Filter.ToString()}' nu a fost gasit!");
+
+            }
             try
             {
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    3, // tipProcesareId pentru filter
+                    tipProcesareFilter.Id, // tipProcesareId pentru filter
                     async img =>
                     {
                         switch (filterType?.ToLower())
@@ -222,12 +251,19 @@ namespace ProcessImage.Controllers
                 return BadRequest("Nu a fost selectata nicio imagine.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
+            var TipProcesare = await _imageProcessingService.GetTipProcesareId();
+            var tipProcesareCompress = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Compress.ToString());
+            if (tipProcesareCompress == null)
+            {
+                throw new InvalidOperationException($"TipProcesare pentru '{TipProcesareEnum.Compress.ToString()}' nu a fost gasit!");
+            }
+
             try
             {
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    4, // tipProcesareId pentru compress
+                    tipProcesareCompress.Id, // tipProcesareId pentru compress
                     async img =>
                     {
                         using var ms = new MemoryStream();
@@ -273,13 +309,23 @@ namespace ProcessImage.Controllers
                 return BadRequest("Textul nu poate fi gol.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
+
+            //optimazare linii de jos
+            var TipProcesare = await _imageProcessingService.GetTipProcesareId();
+            var tipProcesareWatermark = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Watermark.ToString());
+            if (tipProcesareWatermark == null)
+            {
+                throw new InvalidOperationException($"TipProcesare pentru '{TipProcesareEnum.Watermark.ToString()}' nu a fost gasit!");
+
+            }
+
             try
             {
                 
                 var imageBytes = await _imageProcessingService.ProcessAndSaveImageAsync(
                     image,
                     userId,
-                    6, // tipProcesareId pentru watermark
+                    tipProcesareWatermark.Id, // tipProcesareId pentru watermark
                     async img =>
                     {
                         var font = SystemFonts.CreateFont("Arial", fontSize);
@@ -361,7 +407,14 @@ namespace ProcessImage.Controllers
                 return BadRequest("Nu a fost selectata imaginea de referintă.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
-            
+
+            var TipProcesare = await _imageProcessingService.GetTipProcesareId();
+            var tipProcesareWatermark = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.TransferColor.ToString());
+            if (tipProcesareWatermark == null)
+            {
+                throw new InvalidOperationException($"TipProcesare pentru '{TipProcesareEnum.TransferColor.ToString()}' nu a fost gasit!");
+            }
+
             try
             {
                 using var reference = await Image.LoadAsync<Rgba32>(referenceImage.OpenReadStream());

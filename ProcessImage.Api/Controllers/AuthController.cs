@@ -31,8 +31,6 @@ public class AuthController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(AdminLoginViewModel model)
     {
-        Console.WriteLine($"Email: {model?.Email}, Parola: {model?.Parola}");
-
         if (!ModelState.IsValid)
         {
             foreach (var error in ModelState.Values.SelectMany(v => v.Errors))

@@ -81,34 +81,35 @@ namespace ProcessImage.Services
                     includes: q => q.Include(u => u.Subscriptie)
                 );
                 if (user?.Subscriptie == null)
-                    return (false, "❌ Fără subscripție", 0, 0);
+                    return (false, "Fara subscriptie", 0, 0);
                 var subProc = await _subscriptionProcRepository.GetAsync(
                     sp => sp.SubscriptieId == user.SubscriptieId && sp.TipProcesareId == processingTypeId
                 );
                 if (subProc == null)
-                    return (false, $"❌ Tipul de procesare #{processingTypeId} nu e disponibil pentru subscripția {user.Subscriptie.Tip}", 0, 0);
+                    return (false, $"Tipul de procesare #{processingTypeId} nu e disponibil pentru subscripTia {user.Subscriptie.Tip}", 0, 0);
                 if (subProc.LimitaMax == null)
-                    return (true, "✅ Acces nelimitat", 0, -1);
-                var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
-                var endOfMonth = startOfMonth.AddMonths(1);
+                    return (true, "Acces nelimitat", 0, -1);
+                var now = DateTime.Now;
+                var startOfDay = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
+                var endOfDay = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59, 999);
                 var allProcesari = await _procesareRepository.GetAllAsync(
                     includes: q => q.Include(p => p.Imagine)
                 );
                 var count = allProcesari.Count(
                     p => p.Imagine.UtilizatorId == userId &&
                          p.TipProcesareId == processingTypeId &&
-                         p.DataProcesare >= startOfMonth &&
-                         p.DataProcesare < endOfMonth &&
+                         p.DataProcesare >= startOfDay &&
+                         p.DataProcesare < endOfDay &&
                          p.Status == ProcessingStatusEnum.Success
                 );
                 var remaining = subProc.LimitaMax.Value - count;
                 if (count >= subProc.LimitaMax.Value)
-                    return (false, $"❌ Limita atinsă: {count}/{subProc.LimitaMax} procesări luna aceasta", count, 0);
-                return (true, $"✅ {count}/{subProc.LimitaMax} utilizări luna aceasta", count, remaining);
+                    return (false, $"Limita atinsa: {count}/{subProc.LimitaMax} procesAri luna aceasta", count, 0);
+                return (true, $"{count}/{subProc.LimitaMax} utilizAri luna aceastA", count, remaining);
             }
             catch (Exception ex)
             {
-                return (false, $"❌ Eroare: {ex.Message}", 0, 0);
+                return (false, $"eroare: {ex.Message}", 0, 0);
             }
         }
         public async Task LogProcessingAsync(int imagineId, long processingTypeId, string status)

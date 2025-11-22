@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -42,20 +42,27 @@ export class DashboardService {
     );
   }
 
-  getProcessingData(): Observable<ProcessingData[]> {
-    return this.http.get<ProcessingData[]>(`${this.apiUrl}/processing`).pipe(
+  getProcessingData(pageIndex: number = 0, pageSize: number = 10): Observable<{ processing: ProcessingData[], total: number }> {
+    const params = new HttpParams()
+      .set('skip', (pageIndex * pageSize).toString())
+      .set('take', pageSize.toString());
+    return this.http.get<{ processing: ProcessingData[], total: number }>(`${this.apiUrl}/processing`, { params }).pipe(
       catchError(err => {
-        console.error('Eroare la preluarea procesărilor:', err);
-        return of([]);
+        console.error('Eroare la preluarea fișierelor:', err);
+        return of({ processing: [], total: 0 });
       })
     );
   }
 
-  getFilesData(): Observable<FileData[]> {
-    return this.http.get<FileData[]>(`${this.apiUrl}/files`).pipe(
+  getFilesData(pageIndex: number = 0, pageSize: number = 10): Observable<{ files: FileData[], total: number }> {
+    const params = new HttpParams()
+      .set('skip', (pageIndex * pageSize).toString())
+      .set('take', pageSize.toString());
+
+    return this.http.get<{ files: FileData[], total: number }>(`${this.apiUrl}/files`, { params }).pipe(
       catchError(err => {
         console.error('Eroare la preluarea fișierelor:', err);
-        return of([]);
+        return of({ files: [], total: 0 });
       })
     );
   }

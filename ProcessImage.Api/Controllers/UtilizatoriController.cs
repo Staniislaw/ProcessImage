@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Cryptography;
 using global::Data.SDK.Repository;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Text.Json;
 
 namespace ProcessImage.Controllers
 {
@@ -54,7 +56,6 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eroare la preluarea utilizatorilor: {ex.Message}");
                 return View(new List<UserListViewModel>());
             }
         }
@@ -65,19 +66,29 @@ namespace ProcessImage.Controllers
         {
             try
             {
-                var roles = await _rolRepository.GetAllAsync();
-                var subscriptions = await _subscriptieRepository.GetAllAsync();
+                var model = new CreateUserViewModel
+                {
+                    Roluri = (await _rolRepository.GetAllAsync())
+                                .Select(r => new SelectListItem
+                                {
+                                    Text = r.NumeRol,
+                                    Value = r.Id.ToString()
+                                }).ToList(),
 
-                ViewBag.Roles = roles;
-                ViewBag.Subscriptions = subscriptions;
+                    Subscriptii = (await _subscriptieRepository.GetAllAsync())
+                                .Select(s => new SelectListItem
+                                {
+                                    Text = s.Tip,
+                                    Value = s.Id.ToString()
+                                }).ToList()
+                };
 
-                return View();
+                return View(model);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eroare la incarcarea datelor create: {ex.Message}");
                 ModelState.AddModelError("", "Eroare la incarcarea datelor");
-                return View();
+                return View(new CreateUserViewModel());
             }
         }
 
@@ -88,10 +99,6 @@ namespace ProcessImage.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var roles = await _rolRepository.GetAllAsync();
-                var subscriptions = await _subscriptieRepository.GetAllAsync();
-                ViewBag.Roles = roles;
-                ViewBag.Subscriptions = subscriptions;
                 return View(model);
             }
 
@@ -101,46 +108,33 @@ namespace ProcessImage.Controllers
                 if (existingUser != null)
                 {
                     ModelState.AddModelError("Email", "Email-ul este deja folosit");
-                    var roles = await _rolRepository.GetAllAsync();
-                    var subscriptions = await _subscriptieRepository.GetAllAsync();
-                    ViewBag.Roles = roles;
-                    ViewBag.Subscriptions = subscriptions;
                     return View(model);
                 }
-
                 var rol = await _rolRepository.GetAsync(r => r.Id == model.RolId);
                 var subscriptie = await _subscriptieRepository.GetAsync(s => s.Id == model.SubscriptieId);
-
                 if (rol == null || subscriptie == null)
                 {
                     ModelState.AddModelError("", "Rol sau subscriptie invalid");
-                    var rolesData = await _rolRepository.GetAllAsync();
-                    var subscriptionsData = await _subscriptieRepository.GetAllAsync();
-                    ViewBag.Roles = rolesData;
-                    ViewBag.Subscriptions = subscriptionsData;
                     return View(model);
                 }
-                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.Parola);
-                var noiUtilizator = new Utilizator
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.Parola ?? "");
+                var nouUtilizator = new Utilizator
                 {
                     Nume = model.Nume,
                     Email = model.Email,
                     Parola = hashedPassword,
                     RolId = model.RolId,
-                    SubscriptieId = model.SubscriptieId,
+                    SubscriptieId = model.SubscriptieId
                 };
-                await _utilizatorRepository.AddAsync(noiUtilizator);
+                await _utilizatorRepository.AddAsync(nouUtilizator);
                 await _utilizatorRepository.SaveChangesAsync();
+
                 TempData["SuccessMessage"] = $"Utilizatorul {model.Nume} a fost creat cu succes!";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", $"Eroare la crearea utilizatorului: {ex.Message}");
-                var roles = await _rolRepository.GetAllAsync();
-                var subscriptions = await _subscriptieRepository.GetAllAsync();
-                ViewBag.Roles = roles;
-                ViewBag.Subscriptions = subscriptions;
                 return View(model);
             }
         }
@@ -173,7 +167,6 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eroare la editarea utilizatorului: {ex.Message}");
                 return NotFound();
             }
         }
@@ -200,7 +193,6 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eroare la stergerea utilizatorului: {ex.Message}");
                 return NotFound();
             }
         }
@@ -226,7 +218,6 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eroare la stergerea utilizatorului: {ex.Message}");
                 TempData["ErrorMessage"] = "Eroare la stergerea utilizatorului";
                 return RedirectToAction("Index");
             }
@@ -260,7 +251,6 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eroare la editarea utilizatorului: {ex.Message}");
                 return NotFound();
             }
         }
@@ -314,7 +304,6 @@ namespace ProcessImage.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eroare la editarea utilizatorului: {ex.Message}");
                 ModelState.AddModelError("", $"Eroare la actualizarea utilizatorului: {ex.Message}");
                 var roles = await _rolRepository.GetAllAsync();
                 ViewBag.Roles = roles;

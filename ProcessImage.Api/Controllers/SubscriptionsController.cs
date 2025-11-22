@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using ProcessImage.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ProcessImage.Models.DTO;
 
 namespace ProcessImage.Controllers
 {
@@ -154,22 +155,23 @@ namespace ProcessImage.Controllers
                     return NotFound(new { message = $"Abonamentul cu ID-ul {id} nu a fost gasit." });
                 }
 
-                var limits = subscription.SubscripteProcesares.Select(sp => new
+                var limits = subscription.SubscripteProcesares.Select(sp => new LimitDto
                 {
-                    TipProcesare = sp.TipProcesare.Nume,
                     TipProcesareId = sp.TipProcesareId,
+                    TipProcesare = sp.TipProcesare.Nume,
                     LimitaMax = sp.LimitaMax,
                     EsteLimitat = sp.LimitaMax.HasValue,
                     Descriere = sp.LimitaMax.HasValue
                         ? $"Limita de {sp.LimitaMax} procesari pe zi"
                         : "Nelimitat"
                 }).ToList();
-                return Ok(new
+                var response = new SubscriptionLimitsResponse
                 {
                     SubscriptieId = subscription.Id,
                     Tip = subscription.Tip,
                     Limite = limits
-                });
+                };
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -191,15 +193,15 @@ namespace ProcessImage.Controllers
                             .ThenInclude(sp => sp.TipProcesare)
                 );
 
-                var report = subscriptions.Select(s => new
+                var report = subscriptions.Select(s => new SubscriptionReportDto
                 {
-                    s.Id,
-                    s.Tip,
-                    s.Pret,
+                    Id = s.Id,
+                    Tip = s.Tip,
+                    Pret = s.Pret,
                     DimensiuneMaximaMb = s.DimensiuneMaximaMb,
                     SubscriptieProcesareId = s.SubscriptieProcesareId,
                     NumarTipuriProcesare = s.SubscripteProcesares.Count,
-                    TipuriProcesare = s.SubscripteProcesares.Select(sp => new
+                    TipuriProcesare = s.SubscripteProcesares.Select(sp => new TipProcesareReportDto
                     {
                         Id = sp.Id,
                         Nume = sp.TipProcesare.Nume,
@@ -210,7 +212,9 @@ namespace ProcessImage.Controllers
                             ? $"Limitat la {sp.LimitaMax}"
                             : "Nelimitat"
                     }).OrderBy(tp => tp.Nume).ToList()
-                }).OrderBy(s => s.Pret).ToList();
+                })
+                .OrderBy(s => s.Pret)
+                .ToList();
 
                 return Ok(report);
             }

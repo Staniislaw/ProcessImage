@@ -1,4 +1,6 @@
-﻿using SixLabors.ImageSharp;
+﻿using ProcessImage.Entities;
+
+using SixLabors.ImageSharp;
 namespace ProcessImage.Services.Interface
 {
     public interface IImageProcessingService
@@ -6,5 +8,6 @@ namespace ProcessImage.Services.Interface
         Task SaveProcessingRecord(long imagineId, long tipProcesareId, string status);
         Task<long> SaveImageAsync(IFormFile file, long utilizatorId);
         Task<byte[]> ProcessAndSaveImageAsync(IFormFile image, long utilizatorId, long tipProcesareId, Func<Image, Task> processFunc);
+        Task<List<TipProcesare>> GetTipProcesareId();
     }
 }

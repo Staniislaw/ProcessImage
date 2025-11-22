@@ -8,6 +8,9 @@ using ProcessImage.Entities;
 using ProcessImage.Repository.Interfaces;
 using Data.SDK.Repository;
 using ProcessImage.Services.Interface;
+using ProcessImage.Models;
+using ProcessImage.Models.Enum;
+using ProcessImage.Models.DTO;
 
 namespace ProcessImage.Controllers
 {
@@ -78,44 +81,46 @@ namespace ProcessImage.Controllers
             var utilizator = await _utilizatorRepository.GetAsync(u => u.Email == request.Email);
             if (utilizator == null)
                 return Unauthorized(new { message = "Email sau parola incorecta" });
+
             var isValid = BCrypt.Net.BCrypt.Verify(request.Parola, utilizator.Parola);
-            Console.WriteLine($"Verify rezultat: {isValid}");
-
-            if (!BCrypt.Net.BCrypt.Verify(request.Parola, utilizator.Parola))
+            if (!isValid)
                 return Unauthorized(new { message = "Email sau parola incorecta" });
-
             var token = GenerateJwtToken(utilizator);
-
-            return Ok(new
+            var response = new LoginResponse
             {
-                message = "Logare reusita",
-                token = token,
-                utilizator = new
+                Message = "Logare reusita",
+                Token = token,
+                Utilizator = new UtilizatorDto
                 {
-                    id = utilizator.Id,
-                    nume = utilizator.Nume,
-                    email = utilizator.Email
+                    Id = utilizator.Id,
+                    Nume = utilizator.Nume,
+                    Email = utilizator.Email
                 }
-            });
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("profil")]
         public async Task<IActionResult> GetProfil()
         {
-            var userId = _baseService.GetUserId(); 
+            var userId = _baseService.GetUserId();
 
             var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == userId);
             if (utilizator == null)
                 return NotFound(new { message = "Utilizator nu gasit" });
 
-            return Ok(new
+            var profil = new ProfilResponse
             {
-                id = utilizator.Id,
-                nume = utilizator.Nume,
-                email = utilizator.Email,
-                subscriptieId = utilizator.SubscriptieId
-            });
+                Id = utilizator.Id,
+                Nume = utilizator.Nume,
+                Email = utilizator.Email,
+                SubscriptieId = utilizator.SubscriptieId
+            };
+
+            return Ok(profil);
         }
+
 
         [HttpPut("update-profil")]
         public async Task<IActionResult> UpdateProfil([FromBody] UpdateProfilRequest request)
@@ -192,28 +197,5 @@ namespace ProcessImage.Controllers
         }
     }
 
-    public class RegisterRequest
-    {
-        public string Nume { get; set; }
-        public string Email { get; set; }
-        public string Parola { get; set; }
-        public int SubscriptieId { get; set; } 
-    }
-
-    public class LoginRequest
-    {
-        public string Email { get; set; }
-        public string Parola { get; set; }
-    }
-
-    public class UpdateProfilRequest
-    {
-        public string Nume { get; set; }
-    }
-
-    public class ChangePasswordRequest
-    {
-        public string ParolaVeche { get; set; }
-        public string ParolaNoua { get; set; }
-    }
+    
 }

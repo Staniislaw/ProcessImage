@@ -10,12 +10,15 @@ namespace ProcessImage.Services
     {
         private readonly IRepository<ProcesareImagine> _procesareRepository;
         private readonly IRepository<Imagine> _imagineRepository;
+        private readonly IRepository<TipProcesare> _tipProcesareRepository;
         public ImageProcessingService(
             IRepository<Imagine> imagineRepository,
-            IRepository<ProcesareImagine> procesareRepository)
+            IRepository<ProcesareImagine> procesareRepository,
+            IRepository<TipProcesare> tipProcesareRepository)
         {
             _imagineRepository = imagineRepository;
             _procesareRepository = procesareRepository;
+            _tipProcesareRepository = tipProcesareRepository;
         }
         public async Task<long> SaveImageAsync(IFormFile file, long utilizatorId)
         {
@@ -91,6 +94,11 @@ namespace ProcessImage.Services
 
                 throw;
             }
+        }
+        public async Task<List<TipProcesare>> GetTipProcesareId()
+        {
+            var processingTypes = await _tipProcesareRepository.GetAllAsync();
+            return processingTypes.ToList();
         }
     }
 }

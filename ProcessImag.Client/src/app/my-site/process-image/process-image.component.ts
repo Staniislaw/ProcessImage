@@ -236,14 +236,12 @@ export class ProcessImageComponent implements OnInit {
           console.error('Error loading processing types:', error);
           this.showToastMessage('Nu s-au putut încărca tipurile de procesare', 'error');
           this.isLoadingTypes = false;
-          // Fallback la date mock pentru development
           this.loadMockData();
         }
       });
   }
 
   loadMockData(): void {
-    // Date mock pentru development/testing
     this.processingTypes = [
       { id: 1, nume: 'Resize' },
       { id: 2, nume: 'Crop' },
@@ -267,7 +265,6 @@ export class ProcessImageComponent implements OnInit {
         config: { hasIntensity: true, min: 0, max: 100, default: 100, unit: '%' }
       };
 
-      // Traduce numele
       const translatedName = this.nameTranslations[type.nume] || type.nume;
 
       return {
@@ -341,12 +338,10 @@ export class ProcessImageComponent implements OnInit {
       const canvas = this.canvas.nativeElement;
       const ctx = canvas.getContext('2d')!;
 
-      // Reset canvas
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Apply processing based on type
       switch (this.selectedConfig.type) {
         case 'resize':
           this.applyResize(ctx, img);
@@ -430,14 +425,12 @@ export class ProcessImageComponent implements OnInit {
 
   applyCompress(ctx: CanvasRenderingContext2D, img: HTMLImageElement): void {
     ctx.drawImage(img, 0, 0);
-    // Note: compression will be applied in toDataURL with quality parameter
   }
 
   applyRotate(ctx: CanvasRenderingContext2D, img: HTMLImageElement): void {
     const canvas = ctx.canvas;
     const angle = (this.filterValue * Math.PI) / 180;
 
-    // Adjust canvas size for rotation
     const sin = Math.abs(Math.sin(angle));
     const cos = Math.abs(Math.cos(angle));
     canvas.width = img.width * cos + img.height * sin;
@@ -709,7 +702,4 @@ export class ProcessImageComponent implements OnInit {
     };
     reader.readAsDataURL(file);
   }
-
-
-
 }

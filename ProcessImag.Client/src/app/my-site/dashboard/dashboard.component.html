@@ -73,6 +73,10 @@
         <tr mat-header-row *matHeaderRowDef="processingColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: processingColumns;"></tr>
       </table>
+      <mat-paginator #paginator class="demo-paginator" (page)="handlePageEvent($event, DataType.Processing)" [length]="totalProcessingData"
+        [pageSize]="pageSizeProcessing" [showFirstLastButtons]="true" [pageSizeOptions]="pageSizeOptions"
+        aria-label="Select page">
+      </mat-paginator>
     </div>
   </div>
 
@@ -132,6 +136,10 @@
         <tr mat-header-row *matHeaderRowDef="filesColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: filesColumns;"></tr>
       </table>
+      <mat-paginator #paginator class="demo-paginator" (page)="handlePageEvent($event,DataType.Files)" [length]="totalFiles"
+        [pageSize]="pageSizeFiles"  [pageSizeOptions]="pageSizeOptions"
+        aria-label="Select page">
+      </mat-paginator>
     </div>
   </div>
-</div>
+</div>  

@@ -73,11 +73,11 @@ namespace ProcessImage.Controllers
         }
 
         [HttpGet("processing")]
-        public async Task<IActionResult> GetProcessingData()
+        public async Task<IActionResult> GetProcessingData([FromQuery] int skip = 0, [FromQuery] int take = 10)
         {
             var userId = _baseService.GetUserId();
 
-            var processing = (await _procesareImaginiRepository.GetWhereIncludeAsync(
+            var allProcessing = await _procesareImaginiRepository.GetWhereIncludeAsync(
                 p => p.Imagine.UtilizatorId == userId,
                 false,
                 new Expression<Func<ProcesareImagine, object>>[]
@@ -85,38 +85,59 @@ namespace ProcessImage.Controllers
             x => x.Imagine,
             x => x.TipProcesare
                 }
-            ))
-            .Select(p => new
-            {
-                p.Id,
-                p.ImagineId,
-                TipProcesare = p.TipProcesare.Nume,
-                p.Status,
-                p.DataProcesare
-            })
-            .ToList();
+            );
+            var total = allProcessing.Count();
+            var pagedProcessing = allProcessing
+                .Skip(skip)
+                .Take(take)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.ImagineId,
+                    TipProcesare = p.TipProcesare.Nume,
+                    p.Status,
+                    p.DataProcesare
+                })
+                .ToList();
 
-            return Ok(processing);
+            return Ok(new
+            {
+                processing = pagedProcessing,
+                total
+            });
         }
 
 
         [HttpGet("files")]
-        public async Task<IActionResult> GetFilesData()
+        public async Task<IActionResult> GetFilesData([FromQuery] int skip = 0, [FromQuery] int take = 10)
         {
-            var userId = _baseService.GetUserId();
-
-            var files = (await _imagineRepository.FindAsync(f => f.UtilizatorId == userId))
-                        .Select(f => new
-                        {
-                            f.Id,
-                            f.Nume,
-                            f.Tip,
-                            f.UtilizatorId,
-                            f.DataIncarcarii
-                        })
-                        .ToList();
-
-            return Ok(files);
+            try
+            {
+                var userId = _baseService.GetUserId();
+                var query = await _imagineRepository.FindAsync(f => f.UtilizatorId == userId);
+                var total = query.Count();
+                var files = query
+                            .Skip(skip)
+                            .Take(take)
+                            .Select(f => new
+                            {
+                                f.Id,
+                                f.Nume,
+                                f.Tip,
+                                f.UtilizatorId,
+                                f.DataIncarcarii
+                            })
+                            .ToList();
+                return Ok(new
+                {
+                    files = files,
+                    total = total
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Eroare la preluarea fișierelor", error = ex.Message });
+            }
         }
     }
 }
