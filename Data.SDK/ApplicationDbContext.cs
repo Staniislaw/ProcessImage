@@ -1,4 +1,5 @@
-﻿using System.Reflection; // Trebuie adăugat pentru a folosi Assembly
+﻿using System.Linq.Expressions;
+using System.Reflection; // Trebuie adăugat pentru a folosi Assembly
 
 using Base.SDK;
 
@@ -24,6 +25,22 @@ namespace Data.SDK
                 if (assembly.FullName.StartsWith("ProcessImage") || assembly.FullName.StartsWith("Data.SDK"))
                 {
                     modelBuilder.ApplyConfigurationsFromAssembly(assembly);
+                }
+            }
+
+            //FILTRU PENTRU EXLCUDEREA isActive.
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var isActiveProperty = entityType.ClrType.GetProperty("isActive",
+                    BindingFlags.Public | BindingFlags.Instance);
+
+                if (isActiveProperty != null && isActiveProperty.PropertyType == typeof(bool))
+                {
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
+                    var propertyAccess = Expression.Property(parameter, isActiveProperty);
+                    var lambda = Expression.Lambda(propertyAccess, parameter);
+
+                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
                 }
             }
         }

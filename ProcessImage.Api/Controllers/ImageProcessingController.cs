@@ -44,6 +44,11 @@ namespace ProcessImage.Controllers
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectată nicio imagine.");
             var userId = _baseService.GetUserId();
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+               LoggerAppender.LogApplication.Utilizatori,
+               userId
+            );
+            logger.Info($"Utilizatorul {userId} a început procesarea Resize.");
             string userEmail = _baseService.GetUserEmail();
             var TipProcesare = await _imageProcessingService.GetTipProcesareId();
             var tipProcesareResize = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Resize.ToString());
@@ -66,13 +71,12 @@ namespace ProcessImage.Controllers
                         await Task.CompletedTask;
                     }
                 );
-
+                logger.Info($"Utilizatorul {userId} a procesat cu succes procesarea Resize.");
                 return File(imageBytes, "image/png", $"resized-{DateTime.Now.Ticks}.png");
             }
             catch (Exception ex)
             {
                 LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
-                    userEmail,
                     userId,
                     LoggerTypeEnum.Error,
                     $"Eroare la procesare: {ex.Message}"
@@ -93,7 +97,11 @@ namespace ProcessImage.Controllers
                 return BadRequest("Latimea si inaltimea trebuie să fie pozitive.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
-
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+                LoggerAppender.LogApplication.Utilizatori,
+                userId
+            );
+            logger.Info($"Utilizatorul {userId} a început procesarea Crop.");
             var TipProcesare = await _imageProcessingService.GetTipProcesareId();
             var tipProcesareCrop = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Crop.ToString());
             if (tipProcesareCrop == null)
@@ -116,13 +124,12 @@ namespace ProcessImage.Controllers
                         await Task.CompletedTask;
                     }
                 );
-
+                logger.Info($"Utilizatorul {userId} a procesat cu succes procesarea Crop.");
                 return File(imageBytes, "image/png", $"cropped-{DateTime.Now.Ticks}.png");
             }
             catch (Exception ex)
             {
                 LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
-                    userEmail,
                     userId,
                     LoggerTypeEnum.Error,
                     $"Eroare la procesare: {ex.Message}"
@@ -140,6 +147,11 @@ namespace ProcessImage.Controllers
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectata nicio imagine.");
             var userId = _baseService.GetUserId();
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+                LoggerAppender.LogApplication.Utilizatori,
+                userId
+            );
+            logger.Info($"Utilizatorul {userId} a început procesarea Rotate.");
             string userEmail = _baseService.GetUserEmail();
             var TipProcesare = await _imageProcessingService.GetTipProcesareId();
             var tipProcesareRotate = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Rotate.ToString());
@@ -160,13 +172,13 @@ namespace ProcessImage.Controllers
                         await Task.CompletedTask;
                     }
                 );
-
+                logger.Info($"Utilizatorul {userId} a procesat cu succes procesarea Rotate.");
                 return File(imageBytes, "image/png", $"rotated-{DateTime.Now.Ticks}.png");
             }
             catch (Exception ex)
             {
                 LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
-                    userEmail,
+                    
                     userId,
                     LoggerTypeEnum.Error,
                     $"Eroare la procesare: {ex.Message}"
@@ -184,6 +196,11 @@ namespace ProcessImage.Controllers
             if (image == null || image.Length == 0)
                 return BadRequest("Nu a fost selectata nicio imagine.");
             var userId = _baseService.GetUserId();
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+                LoggerAppender.LogApplication.Utilizatori,
+                userId
+            );
+            logger.Info($"Utilizatorul {userId} a început procesarea Filter.");
             string userEmail = _baseService.GetUserEmail();
             var TipProcesare = await _imageProcessingService.GetTipProcesareId();
             var tipProcesareFilter = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Filter.ToString());
@@ -226,13 +243,12 @@ namespace ProcessImage.Controllers
                         await Task.CompletedTask;
                     }
                 );
-
+                logger.Info($"Utilizatorul {userId} a procesat cu succes procesarea Filter.");
                 return File(imageBytes, "image/png", $"filtered-{DateTime.Now.Ticks}.png");
             }
             catch (Exception ex)
             {
                 LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
-                    userEmail,
                     userId,
                     LoggerTypeEnum.Error,
                     $"Eroare la procesare: {ex.Message}"
@@ -251,6 +267,11 @@ namespace ProcessImage.Controllers
                 return BadRequest("Nu a fost selectata nicio imagine.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+                LoggerAppender.LogApplication.Utilizatori,
+                userId
+            );
+            logger.Info($"Utilizatorul {userId} a început procesarea Compress.");
             var TipProcesare = await _imageProcessingService.GetTipProcesareId();
             var tipProcesareCompress = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.Compress.ToString());
             if (tipProcesareCompress == null)
@@ -275,13 +296,12 @@ namespace ProcessImage.Controllers
                         await Task.CompletedTask;
                     }
                 );
-
+                logger.Info($"Utilizatorul {userId} a procesat cu succes procesarea Compress");
                 return File(imageBytes, "image/jpeg", $"compressed-{DateTime.Now.Ticks}.jpg");
             }
             catch (Exception ex)
             {
                 LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
-                    userEmail,
                     userId,
                     LoggerTypeEnum.Error,
                     $"Eroare la procesare: {ex.Message}"
@@ -309,6 +329,11 @@ namespace ProcessImage.Controllers
                 return BadRequest("Textul nu poate fi gol.");
             var userId = _baseService.GetUserId();
             string userEmail = _baseService.GetUserEmail();
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+                LoggerAppender.LogApplication.Utilizatori,
+                userId
+            );
+            logger.Info($"Utilizatorul {userId} a început procesarea Watermark.");
 
             //optimazare linii de jos
             var TipProcesare = await _imageProcessingService.GetTipProcesareId();
@@ -379,13 +404,12 @@ namespace ProcessImage.Controllers
                         await Task.CompletedTask;
                     }
                 );
-
+                logger.Info($"Utilizatorul {userId} a procesat cu succes procesarea Watermark.");
                 return File(imageBytes, "image/png", $"watermarked-{DateTime.Now.Ticks}.png");
             }
             catch (Exception ex)
             {
                 LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
-                    userEmail,
                     userId,
                     LoggerTypeEnum.Error,
                     $"Eroare la procesare: {ex.Message}"
@@ -406,8 +430,12 @@ namespace ProcessImage.Controllers
             if (referenceImage == null || referenceImage.Length == 0)
                 return BadRequest("Nu a fost selectata imaginea de referintă.");
             var userId = _baseService.GetUserId();
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+                  LoggerAppender.LogApplication.Utilizatori,
+                  userId
+              );
             string userEmail = _baseService.GetUserEmail();
-
+            logger.Info($"Utilizatorul {userId} a început procesarea Transfer Colors.");
             var TipProcesare = await _imageProcessingService.GetTipProcesareId();
             var tipProcesareWatermark = TipProcesare.FirstOrDefault(x => x.Nume == TipProcesareEnum.TransferColor.ToString());
             if (tipProcesareWatermark == null)
@@ -447,19 +475,37 @@ namespace ProcessImage.Controllers
                         await Task.CompletedTask;
                     }
                 );
-                
+                logger.Info($"Utilizatorul {userId} a procesat cu succes Transfer Colors.");
                 return File(imageBytes, "image/png", $"color-transfer-{DateTime.Now.Ticks}.png");
             }
             catch (Exception ex)
             {
                 LoggerAppender.LogInformation(LoggerAppender.LogApplication.ProcessImage,
-                    userEmail,
                     userId,
                     LoggerTypeEnum.Error,
                     $"Eroare la procesare: {ex.Message}"
                 );
 
                 return BadRequest($"Eroare la transfer-colors: {ex.Message}");
+            }
+        }
+        [HttpGet("GetProcessingTypes")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> GetProcessingTypes()
+        {
+            try
+            {
+                var tipuriProcesare = await _imageProcessingService.GetTipProcesareId();
+                var result = tipuriProcesare.Select(t => new
+                {
+                    t.Id,
+                    t.Nume,
+                });
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Eroare la preluarea tipurilor de procesare: {ex.Message}");
             }
         }
     }

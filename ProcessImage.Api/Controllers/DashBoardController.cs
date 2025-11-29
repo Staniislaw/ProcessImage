@@ -5,12 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using ProcessImage.Entities;
+using ProcessImage.Helpers;
 using ProcessImage.Services.Interface;
-
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
-
 namespace ProcessImage.Controllers
 {
     [ApiController]
@@ -137,6 +134,87 @@ namespace ProcessImage.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = "Eroare la preluarea fișierelor", error = ex.Message });
+            }
+        }
+        [HttpDelete("deleteProcessingData/{id}")]
+        public async Task<IActionResult> DeleteProcessingData(int id)
+        {
+            var userId = _baseService.GetUserId();
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+                LoggerAppender.LogApplication.Utilizatori,
+                userId
+            );
+
+            logger.Info($"Userul {userId} a acționat butonul de ștergere date procesate");
+
+            try
+            {
+                if (userId == 0)
+                {
+                    return Unauthorized(new { message = "Nu aveți permisiune să ștergeți aceste date" });
+                }
+
+                var procesareImagine = await _procesareImaginiRepository.GetAsync(x => x.Id == id);
+                if (procesareImagine == null)
+                {
+                    return NotFound(new { message = "Datele procesate nu au fost găsite" });
+                }
+
+                var imagine = await _imagineRepository.GetAsync(x => x.Id == procesareImagine.ImagineId);
+                if (imagine == null)
+                {
+                    return NotFound(new { message = "Imaginea asociată nu a fost găsită" });
+                }
+
+                await _procesareImaginiRepository.DeleteAsync(procesareImagine);
+                await _procesareImaginiRepository.SaveChangesAsync();
+
+                logger.Info($"Datele procesate cu id {id} au fost șterse cu succes.");
+                return Ok(new { message = "Datele procesate au fost șterse cu succes" });
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Eroare la ștergerea datelor procesate cu id {id}: {ex}", ex);
+                return BadRequest(new { message = "Eroare la ștergerea datelor procesate", error = ex.Message });
+            }
+        }
+
+
+        [HttpDelete("deleteFile/{id}")]
+        public async Task<IActionResult> DeleteFile(int id)
+        {
+            var userId = _baseService.GetUserId();
+            var logger = LoggerAppender.GetLoggerForApplicationType(
+                   LoggerAppender.LogApplication.Utilizatori,
+                   userId
+               );
+            try
+            {
+                var imagine = await _imagineRepository.GetAsync(x => x.Id == id);
+                logger.Info($"Userul {userId} a acționat butonul de stergere fisiere");
+
+                if (imagine == null)
+                {
+                    return NotFound(new { message = "Fiыierul nu a fost gasit" });
+                }
+                if (imagine.UtilizatorId != userId)
+                {
+                    return Unauthorized(new { message = "Nu aveеi permisiune sф ыtergeеi acest fiыier" });
+                }
+                var procesariAsociate = await _procesareImaginiRepository.FindAsync(p => p.ImagineId == id);
+                foreach (var procesare in procesariAsociate)
+                {
+                    await _procesareImaginiRepository.DeleteAsync(procesare);
+                }
+                await _imagineRepository.DeleteAsync(imagine);
+                await _imagineRepository.SaveChangesAsync();
+
+                return Ok(new { message = "Fiыierul ыi toate datele procesate asociate au fost ыterse cu succes" });
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Eroare la ștergerea datelor procesate cu id {id}: {ex}", ex);
+                return BadRequest(new { message = "Eroare la ыtergerea fiierului", error = ex.Message });
             }
         }
     }

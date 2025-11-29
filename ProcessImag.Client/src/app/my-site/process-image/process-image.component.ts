@@ -5,21 +5,23 @@ import { HttpClient } from '@angular/common/http';
 import { ImageProcessingService } from './process-iamge.service';
 import { Observable } from 'rxjs';
 import { CropSelectorComponent } from './crop-selector/crop-selector/crop-selector.component';
+import { UpgradePlanDialogComponent } from '../../dialogs/upgrade-plan-dialog/upgrade-plan-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
-interface ProcessingType {
+export interface ProcessingType {
   id: number;
   nume: string;
   icon?: string;
   description?: string;
 }
-interface CropArea {
+export interface CropArea {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-interface ProcessingConfig {
+export interface ProcessingConfig {
   id: number;
   type: string;
   label: string;
@@ -211,8 +213,7 @@ export class ProcessImageComponent implements OnInit {
     unit: '%',
     customFields: []
   };
-
-  constructor(private http: HttpClient, private imageService: ImageProcessingService) { }
+  constructor(private http: HttpClient, private imageService: ImageProcessingService,private dialog : MatDialog) { }
 
   ngOnInit(): void {
     this.loadProcessingTypes();
@@ -221,24 +222,21 @@ export class ProcessImageComponent implements OnInit {
   loadProcessingTypes(): void {
     this.isLoadingTypes = true;
 
-    // Înlocuiește cu URL-ul tău de backend
-    this.http.get<ProcessingType[]>('YOUR_BACKEND_URL/api/processing-types')
-      .subscribe({
-        next: (types) => {
-          this.processingTypes = types;
-          this.createProcessingConfigs();
-          if (this.processingConfigs.length > 0) {
-            this.selectConfig(this.processingConfigs[0]);
-          }
-          this.isLoadingTypes = false;
-        },
-        error: (error) => {
-          console.error('Error loading processing types:', error);
-          this.showToastMessage('Nu s-au putut încărca tipurile de procesare', 'error');
-          this.isLoadingTypes = false;
-          this.loadMockData();
+    this.imageService.getProcessingTypes().subscribe({
+      next: (types) => {
+        this.processingTypes = types;
+        this.createProcessingConfigs();
+        if (this.processingConfigs.length > 0) {
+          this.selectConfig(this.processingConfigs[0]);
         }
-      });
+        this.isLoadingTypes = false;
+      },
+      error: () => {
+        this.showToastMessage('Nu s-au putut încarca tipurile de procesare', 'error');
+        this.isLoadingTypes = false;
+        this.loadMockData();
+      }
+    });
   }
 
   loadMockData(): void {
@@ -538,8 +536,6 @@ export class ProcessImageComponent implements OnInit {
     }
   }
 
-
-
   initializeCustomFields(): void {
     this.customFieldValues = {};
     if (this.selectedConfig.customFields && this.selectedConfig.customFields.length > 0) {
@@ -585,7 +581,23 @@ export class ProcessImageComponent implements OnInit {
     this.imageService.checkProcessingLimit(processingTypeId).subscribe(result => {
       if (!result.canProcess) {
         this.showToastMessage(result.message || 'Limita atinsă', 'error');
+        const dialogRef = this.dialog.open(UpgradePlanDialogComponent, {
+          width: '1000px',
+          maxWidth: '90vw',
+          disableClose: true,
+          data: {
+            message: result.message || 'Ai atins limita de procesare'
+          }
+        });
         this.isProcessing = false;
+        dialogRef.afterClosed().subscribe(upgraded => {
+          if (upgraded) {
+            this.showToastMessage('Abonament upgradat! Reîncerc procesarea...', 'success');
+            setTimeout(() => {
+              this.processImageBackend(); 
+            }, 1500);
+          }
+        });
         return;
       }
 

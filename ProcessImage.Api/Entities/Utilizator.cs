@@ -15,6 +15,7 @@ public partial class Utilizator
     public long SubscriptieId { get; set; }
 
     public string Email { get; set; } = null!;
+    public bool isActive { get; set; } = true;
     public long? RolId { get; set; }
     public virtual Subscriptie Subscriptie { get; set; } = null!;
     public virtual Rol Rol { get; set; } = null!;

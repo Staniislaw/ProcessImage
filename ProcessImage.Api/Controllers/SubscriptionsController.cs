@@ -228,7 +228,6 @@ namespace ProcessImage.Controllers
             }
         }
         [HttpPost("activate/{id}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> ActivateSubscription(int id, [FromQuery] int? utilizatorId)
         {
             if(!utilizatorId.HasValue)

@@ -44,11 +44,13 @@ namespace ProcessImage.Helpers
         {
             [EnumMember(Value = "ProcessImage")]
             ProcessImage = 1,
+            [EnumMember(Value = "Utilizatori")]
+            Utilizatori = 2,
         }
 
-        public static void LogInformation(LogApplication applicationType, string companyName, int companyId, string loggerType, string message)
+        public static void LogInformation(LogApplication applicationType, int userId, string loggerType, string message)
         {
-            var logger = GetLoggerForApplicationType(applicationType, companyName, companyId);
+            var logger = GetLoggerForApplicationType(applicationType, userId);
 
             switch (loggerType.ToLower())
             {
@@ -67,16 +69,19 @@ namespace ProcessImage.Helpers
             }
         }
 
-        public static ILog GetLoggerForApplicationType(LogApplication logApplication, string userName, int userId)
+        public static ILog GetLoggerForApplicationType(LogApplication logApplication, int userId)
         {
             ILog logger;
             switch (logApplication)
             {
                 case LogApplication.ProcessImage:
-                    logger = GetLogger($"{userName}_{userId}_ProcessImage", $"{userName}_{userId}_ProcessImage");
+                    logger = GetLogger($"{userId}_ProcessImage", $"{userId}_ProcessImage");
+                    break;
+                case LogApplication.Utilizatori:
+                    logger = GetLogger($"{userId}_Utilizatori", $"{userId}_Utilizatori");
                     break;
                 default:
-                    logger = GetLogger($"{userName}_{userId}_Appender", $"{userName}_{userId}");
+                    logger = GetLogger($"{userId}_Appender", $"{userId}");
                     break;
             }
             return logger;

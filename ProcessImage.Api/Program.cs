@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using log4net.Config;
 using log4net;
 using System.Reflection;
+using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
 

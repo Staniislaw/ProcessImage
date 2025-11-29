@@ -18,7 +18,7 @@ namespace ProcessImage.ViewModels
         [Compare("NovaParola", ErrorMessage = "Parolele nu se potrivesc")]
         public string? ConfirmaNovaParola { get; set; }
         [Required(ErrorMessage = "Rolul este obligatoriu")]
-        public long RolId { get; set; }
+        public long? RolId { get; set; }
     }
 
 

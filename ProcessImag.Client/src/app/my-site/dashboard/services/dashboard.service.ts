@@ -66,4 +66,21 @@ export class DashboardService {
       })
     );
   }
+  deleteProcessingData(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/deleteProcessingData/${id}`).pipe(
+      catchError(err => {
+        console.error('Eroare la ștergerea datelor procesate:', err);
+        return of(null);
+      })
+    );
+  }
+  deleteFile(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/deleteFile/${id}`).pipe(
+      catchError(err => {
+        console.error('Eroare la ștergerea fișierului:', err);
+        return of(null);
+      })
+    );
+  }
+
 }

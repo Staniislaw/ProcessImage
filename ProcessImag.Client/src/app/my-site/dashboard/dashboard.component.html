@@ -70,12 +70,22 @@
           </td>
         </ng-container>
 
+        <!--Actions-->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acțiuni</th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="red" (click)="deleteProcessingData(element.id)" matTooltip="Sterge">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
         <tr mat-header-row *matHeaderRowDef="processingColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: processingColumns;"></tr>
       </table>
-      <mat-paginator #paginator class="demo-paginator" (page)="handlePageEvent($event, DataType.Processing)" [length]="totalProcessingData"
-        [pageSize]="pageSizeProcessing" [showFirstLastButtons]="true" [pageSizeOptions]="pageSizeOptions"
-        aria-label="Select page">
+      <mat-paginator #paginator class="demo-paginator" (page)="handlePageEvent($event, DataType.Processing)"
+        [length]="totalProcessingData" [pageSize]="pageSizeProcessing" [showFirstLastButtons]="true"
+        [pageSizeOptions]="pageSizeOptions" aria-label="Select page">
       </mat-paginator>
     </div>
   </div>
@@ -133,13 +143,22 @@
           </td>
         </ng-container>
 
+        <!--Actions-->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acțiuni</th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="red" (click)="deleteFile(element.id)" matTooltip="sterge">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
         <tr mat-header-row *matHeaderRowDef="filesColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: filesColumns;"></tr>
       </table>
-      <mat-paginator #paginator class="demo-paginator" (page)="handlePageEvent($event,DataType.Files)" [length]="totalFiles"
-        [pageSize]="pageSizeFiles"  [pageSizeOptions]="pageSizeOptions"
-        aria-label="Select page">
+      <mat-paginator #paginator class="demo-paginator" (page)="handlePageEvent($event,DataType.Files)"
+        [length]="totalFiles" [pageSize]="pageSizeFiles" [pageSizeOptions]="pageSizeOptions" aria-label="Select page">
       </mat-paginator>
     </div>
   </div>
-</div>  
+</div>

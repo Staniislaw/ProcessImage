@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { ProcessingType } from './process-image.component';
 
 @Injectable({
   providedIn: 'root'
@@ -81,6 +82,13 @@ export class ImageProcessingService {
       catchError(err => {
         console.error('Eroare la verificarea limitei:', err);
         return of({ canProcess: false, message: 'Eroare la verificarea limitei' });
+      })
+    );
+  }
+  getProcessingTypes(): Observable<ProcessingType[]> {
+    return this.http.get<ProcessingType[]>(`${this.apiUrl}/GetProcessingTypes/`).pipe(
+      catchError((err) => {
+        return of([]); 
       })
     );
   }

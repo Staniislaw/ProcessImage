@@ -1,0 +1,103 @@
+<div class="upgrade-dialog-container">
+  <!-- Close Button -->
+  <button class="close-btn" (click)="closeDialog()" title="Închide">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Se încarcă abonamentele...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <p>{{ error }}</p>
+    <button (click)="loadSubscriptions()" class="retry-btn">Încearcă din nou</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error" class="content">
+    <!-- Header -->
+    <div class="dialog-header">
+      <h2 class="dialog-title">Ai atins limita de procesare</h2>
+      <p class="dialog-subtitle">Upgrade-ază-ți abonamentul pentru a continua</p>
+    </div>
+
+    <!-- Plans Grid -->
+    <div class="plans-grid">
+      <div *ngFor="let sub of subscriptions" 
+           class="plan-card" 
+           [class.selected]="selectedPlanId === sub.id"
+           [class.popular]="isPopular(sub.tip)">
+        
+        <!-- Popular Badge -->
+        <div *ngIf="isPopular(sub.tip)" class="popular-badge">
+          <span>⚡ CEL MAI POPULAR</span>
+        </div>
+
+        <!-- Card Header -->
+        <div class="card-header" [style.background]="getPlanConfig(sub.tip).gradient">
+          <div class="plan-icon">{{ getPlanConfig(sub.tip).icon }}</div>
+          <h3 class="plan-type">{{ sub.tip }}</h3>
+          <p class="plan-description">{{ getPlanConfig(sub.tip).description }}</p>
+        </div>
+
+        <!-- Price Section -->
+        <div class="price-section">
+          <div class="price-wrapper">
+            <span class="currency">Lei</span>
+            <span class="price">{{ formatPrice(sub.pret) }}</span>
+            <span class="period">{{ sub.pret === 0 ? '/ gratuit' : '/ lună' }}</span>
+          </div>
+        </div>
+
+        <!-- Processing Summary -->
+        <div class="processing-summary">
+          <div class="summary-badge" [ngClass]="hasUnlimitedProcessing(sub) ? 'unlimited' : 'limited'">
+            <span class="summary-icon">{{ hasUnlimitedProcessing(sub) ? '∞' : '📊' }}</span>
+            <span class="summary-text">{{ getProcessingSummary(sub) }}</span>
+          </div>
+        </div>
+
+        <!-- Features List -->
+        <div class="features-list">
+          <div *ngFor="let feature of getFeatures(sub)" class="feature-item">
+            <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ feature }}</span>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button 
+          (click)="selectPlan(sub)" 
+          class="select-btn"
+          [ngClass]="getPlanConfig(sub.tip).buttonColor"
+          [disabled]="isProcessing || selectedPlanId === sub.id">
+          <span *ngIf="selectedPlanId !== sub.id">Upgrade acum</span>
+          <span *ngIf="selectedPlanId === sub.id && isProcessing" class="loading-text">
+            <svg class="spinner-icon" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Se procesează...
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="footer-info">
+      <p class="info-text">
+        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Poți schimba abonamentul oricând dorești
+      </p>
+    </div>
+  </div>
+</div>

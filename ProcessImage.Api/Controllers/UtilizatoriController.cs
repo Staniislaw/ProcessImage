@@ -163,7 +163,16 @@ namespace ProcessImage.Controllers
                 ViewBag.Roles = roles;
                 ViewBag.Subscriptions = subscriptions;
 
-                return View(utilizator);
+                var model = new EditUserViewModel
+                {
+                    Id = utilizator.Id,
+                    Nume = utilizator.Nume,
+                    Email = utilizator.Email,
+                    RolId = utilizator.RolId
+                };
+
+                return View(model);
+
             }
             catch (Exception ex)
             {
@@ -171,56 +180,19 @@ namespace ProcessImage.Controllers
             }
         }
 
-        // GET: Admin/Utilizatori/Delete/5
         [HttpGet("Delete/{id}")]
         public async Task<IActionResult> Delete(long id)
         {
-            try
-            {
-                var utilizator = await _utilizatorRepository.GetAsync(
-                    u => u.Id == id,
-                    includes: query => query
-                        .Include(u => u.Rol)
-                        .Include(u => u.Subscriptie)
-                );
+            var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == id);
 
-                if (utilizator == null)
-                {
-                    return NotFound();
-                }
-
-                return View(utilizator);
-            }
-            catch (Exception ex)
-            {
+            if (utilizator == null)
                 return NotFound();
-            }
-        }
+            utilizator.isActive = false;
 
-        // POST: Admin/Utilizatori/Delete/5
-        [HttpPost("Delete/{id}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(long id)
-        {
-            try
-            {
-                var utilizator = await _utilizatorRepository.GetAsync(u => u.Id == id);
-                if (utilizator == null)
-                {
-                    return NotFound();
-                }
+            await _utilizatorRepository.UpdateAsync(utilizator);
 
-                await _utilizatorRepository.DeleteAsync(utilizator);
-                await _utilizatorRepository.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = $"Utilizatorul {utilizator.Nume} a fost sters cu succes!";
-                return RedirectToAction("Index");
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = "Eroare la stergerea utilizatorului";
-                return RedirectToAction("Index");
-            }
+            TempData["SuccessMessage"] = $"Utilizatorul {utilizator.Nume} a fost dezactivat cu succes!";
+            return RedirectToAction("Index");
         }
 
         [HttpGet("EditUser/{id}")]

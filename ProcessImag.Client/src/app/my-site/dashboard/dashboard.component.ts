@@ -9,6 +9,7 @@ import { DashboardService, FileData, ProcessingData, Stat } from './services/das
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Observable } from 'rxjs';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTooltip } from "@angular/material/tooltip";
 export enum DataType {
   Files = 'FilesData',
   Processing = 'ProcessingData'
@@ -24,7 +25,8 @@ export enum DataType {
     MatIconModule,
     MatProgressSpinnerModule,
     MatPaginatorModule,
-    MatSelectModule
+    MatSelectModule,
+    MatTooltip
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
@@ -39,8 +41,8 @@ export class DashboardComponent implements OnInit {
   stats: Stat[] = [];
   processingData: ProcessingData[] = [];
   filesData: FileData[] = [];
-  processingColumns: string[] = ['id', 'imagineId', 'tipProcesare', 'status', 'dataProcesare'];
-  filesColumns: string[] = ['id', 'nume', 'tip', 'utilizatorId', 'dataIncarcarii'];
+  processingColumns: string[] = ['id', 'imagineId', 'tipProcesare', 'status', 'dataProcesare', 'actions'];
+  filesColumns: string[] = ['id', 'nume', 'tip', 'utilizatorId', 'dataIncarcarii', 'actions'];
 
 
   // Pentru Files
@@ -138,5 +140,21 @@ export class DashboardComponent implements OnInit {
       'pending': 'chip-pending'
     };
     return statusMap[status.toLowerCase()] || 'chip-pending';
+  }
+  deleteProcessingData(id: number): void {
+    this.dashboardService.deleteProcessingData(id).subscribe({
+      next: (response) => {
+        this.processingData = this.processingData.filter(file => file.id !== id);
+      },
+      error: (err) => console.error('Eroare la ștergere:', err)
+    });
+  }
+  deleteFile(id: number): void {
+    this.dashboardService.deleteFile(id).subscribe({
+      next: (response) => {
+        this.filesData = this.filesData.filter(file => file.id !== id);
+      },
+      error: (err) => console.error('Eroare la ștergere:', err)
+    });
   }
 }

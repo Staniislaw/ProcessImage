@@ -468,7 +468,9 @@
                                     <a href="/Admin/Utilizatori/Edit/@user.Id" class="btn-action btn-edit">
                                         <i class="fas fa-edit"></i> Editează
                                     </a>
-                                    <a href="/Admin/Utilizatori/Delete/@user.Id" class="btn-action btn-delete">
+                                    <a href="/Admin/Utilizatori/Delete/@user.Id"
+                                       class="btn-action btn-delete"
+                                       onclick="return confirm('Sigur vrei să ștergi acest utilizator?');">
                                         <i class="fas fa-trash"></i> Șterge
                                     </a>
                                 </div>

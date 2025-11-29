@@ -10,16 +10,16 @@
     
     <div class="crop-info" *ngIf="cropArea">
       <p>X: {{cropArea.x}}px, Y: {{cropArea.y}}px</p>
-      <p>Lățime: {{cropArea.width}}px, Înălțime: {{cropArea.height}}px</p>
+      <p>Latime: {{cropArea.width}}px, inaltime: {{cropArea.height}}px</p>
     </div>
   </div>
   
   <div class="crop-controls">
     <button (click)="resetCrop()" class="btn-reset">
-      Resetează Selecția
+      Reseteaza Selectia
     </button>
     <button (click)="applyCrop()" class="btn-apply" [disabled]="!cropArea">
-      Aplică Crop
+      Aplica Crop
     </button>
   </div>
 </div>
