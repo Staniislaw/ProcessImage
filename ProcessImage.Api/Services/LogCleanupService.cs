@@ -10,10 +10,8 @@ namespace ProcessImage.Services
 
             if (!Directory.Exists(logsPath))
             {
-                Console.WriteLine($"Folderul de loguri nu există: {logsPath}");
                 return Task.CompletedTask;
             }
-
             var files = Directory.GetFiles(logsPath, "*.log*", SearchOption.TopDirectoryOnly);
             int counter = 0;
 
@@ -29,12 +27,9 @@ namespace ProcessImage.Services
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Eroare la ștergerea fișierului {file}: {ex.Message}");
                     }
                 }
             }
-
-            Console.WriteLine($"[{DateTime.Now}] Am șters {counter} fișiere de log vechi.");
             return Task.CompletedTask;
         }
 
