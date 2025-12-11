@@ -22,6 +22,8 @@ namespace ProcessImage.Infrastructure
             services.AddScoped<IImageProcessingService,ImageProcessingService>();
             services.AddScoped<ILogCleanupService, LogCleanupService>();
             services.AddScoped<IDashBoardService, DashBoardService>();
+            services.AddScoped<ISubscriptionsService, SubscriptionsService>();
+            services.AddScoped<IUtilizatorService, UtilizatorService>();
             //.WithCronSchedule("0 */1 * * * ?")
             services.AddQuartz(q =>
             {

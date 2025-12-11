@@ -7,27 +7,32 @@ using System.Security.Claims;
 using ProcessImage.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using ProcessImage.Models.DTO;
+using ProcessImage.Services;
 
 namespace ProcessImage.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class SubscriptionsController : ControllerBase
     {
         private readonly IRepository<Subscriptie> _subscriptieRepository;
         private readonly IRepository<Utilizator> _utilizatorRepository;
         private readonly IRepository<TipProcesare> _tipProcesareRepository;
         private readonly IBaseService _baseService;
+        private readonly ISubscriptionsService _subscriptionsService;
         public SubscriptionsController(
             IRepository<Subscriptie> subscriptieRepository,
             IRepository<TipProcesare> tipProcesareRepository,
             IRepository<Utilizator> utilizatorRepository,
+            ISubscriptionsService subscriptionsService,
             IBaseService baseService)
         {
             _subscriptieRepository = subscriptieRepository;
             _tipProcesareRepository = tipProcesareRepository;
             _utilizatorRepository = utilizatorRepository;
             _baseService = baseService;
+            _subscriptionsService = subscriptionsService;
         }
 
         [HttpGet]
@@ -138,40 +143,18 @@ namespace ProcessImage.Controllers
             }
         }
 
+
         [HttpGet("{id}/limits")]
         public async Task<ActionResult> GetSubscriptionLimits(int id)
         {
             try
             {
-                var subscription = await _subscriptieRepository.GetAsync(
-                    predicate: s => s.Id == id,
-                    includes: query => query
-                        .Include(s => s.SubscripteProcesares)
-                            .ThenInclude(sp => sp.TipProcesare)
-                );
-
-                if (subscription == null)
-                {
-                    return NotFound(new { message = $"Abonamentul cu ID-ul {id} nu a fost gasit." });
-                }
-
-                var limits = subscription.SubscripteProcesares.Select(sp => new LimitDto
-                {
-                    TipProcesareId = sp.TipProcesareId,
-                    TipProcesare = sp.TipProcesare.Nume,
-                    LimitaMax = sp.LimitaMax,
-                    EsteLimitat = sp.LimitaMax.HasValue,
-                    Descriere = sp.LimitaMax.HasValue
-                        ? $"Limita de {sp.LimitaMax} procesari pe zi"
-                        : "Nelimitat"
-                }).ToList();
-                var response = new SubscriptionLimitsResponse
-                {
-                    SubscriptieId = subscription.Id,
-                    Tip = subscription.Tip,
-                    Limite = limits
-                };
+                var response = await _subscriptionsService.GetSubscriptionLimitsAsync(id);
                 return Ok(response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -187,35 +170,7 @@ namespace ProcessImage.Controllers
         {
             try
             {
-                var subscriptions = await _subscriptieRepository.GetAllAsync(
-                    includes: query => query
-                        .Include(s => s.SubscripteProcesares)
-                            .ThenInclude(sp => sp.TipProcesare)
-                );
-
-                var report = subscriptions.Select(s => new SubscriptionReportDto
-                {
-                    Id = s.Id,
-                    Tip = s.Tip,
-                    Pret = s.Pret,
-                    DimensiuneMaximaMb = s.DimensiuneMaximaMb,
-                    SubscriptieProcesareId = s.SubscriptieProcesareId,
-                    NumarTipuriProcesare = s.SubscripteProcesares.Count,
-                    TipuriProcesare = s.SubscripteProcesares.Select(sp => new TipProcesareReportDto
-                    {
-                        Id = sp.Id,
-                        Nume = sp.TipProcesare.Nume,
-                        TipProcesareId = sp.TipProcesareId,
-                        LimitaMax = sp.LimitaMax,
-                        EsteLimitat = sp.LimitaMax.HasValue,
-                        Status = sp.LimitaMax.HasValue
-                            ? $"Limitat la {sp.LimitaMax}"
-                            : "Nelimitat"
-                    }).OrderBy(tp => tp.Nume).ToList()
-                })
-                .OrderBy(s => s.Pret)
-                .ToList();
-
+                var report = await _subscriptionsService.GetSubscriptionsReportAsync();
                 return Ok(report);
             }
             catch (Exception ex)

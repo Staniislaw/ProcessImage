@@ -16,22 +16,12 @@ namespace ProcessImage.Controllers
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class DashBoardController : Controller
     {
-        private readonly IRepository<ProcesareImagine> _procesareImaginiRepository;
-        private readonly IRepository<Imagine> _imagineRepository;
-        private readonly IRepository<TipProcesare> _tipProcesareRepository;
         private readonly IBaseService _baseService;
         private readonly IDashBoardService _dashBoardService;
-
         public DashBoardController(
-            IRepository<ProcesareImagine> procesareImaginiRepository,
-            IRepository<Imagine> imagineRepository,
-            IRepository<TipProcesare> tipProcesareRepository,
             IBaseService baseService,
             IDashBoardService dashBoardService)
         {
-            _procesareImaginiRepository = procesareImaginiRepository;
-            _imagineRepository = imagineRepository;
-            _tipProcesareRepository = tipProcesareRepository;
             _baseService = baseService;
             _dashBoardService = dashBoardService;
         }

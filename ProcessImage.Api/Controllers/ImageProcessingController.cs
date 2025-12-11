@@ -1,16 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.Fonts;
 using Color = SixLabors.ImageSharp.Color;
 using SixLabors.ImageSharp.PixelFormats;
 using ProcessImage.Helpers.ProcessImage.Helpers;
 using System.Numerics;
-using Data.SDK.Repository;
-using ProcessImage.Entities;
-using ProcessImage.Services;
 using ProcessImage.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -341,7 +337,6 @@ namespace ProcessImage.Controllers
             if (tipProcesareWatermark == null)
             {
                 throw new InvalidOperationException($"TipProcesare pentru '{TipProcesareEnum.Watermark.ToString()}' nu a fost gasit!");
-
             }
 
             try
