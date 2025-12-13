@@ -24,6 +24,9 @@ namespace ProcessImage.Infrastructure
             services.AddScoped<IDashBoardService, DashBoardService>();
             services.AddScoped<ISubscriptionsService, SubscriptionsService>();
             services.AddScoped<IUtilizatorService, UtilizatorService>();
+            services.AddSingleton<ICacheService, CacheService>();
+
+            services.AddMemoryCache();
             //.WithCronSchedule("0 */1 * * * ?")
             services.AddQuartz(q =>
             {
