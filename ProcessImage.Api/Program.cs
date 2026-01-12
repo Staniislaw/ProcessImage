@@ -11,6 +11,7 @@ using log4net.Config;
 using log4net;
 using System.Reflection;
 using Quartz;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,6 +85,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")),
+    RequestPath = "" 
+});
+
 app.UseRouting();
 
 app.UseCors("AllowAll");

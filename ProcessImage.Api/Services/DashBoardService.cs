@@ -176,7 +176,6 @@ namespace ProcessImage.Services
                         message = "Utilizator neautorizat"
                     });
                 }
-
                 var allProcessing = await _procesareImaginiRepository.GetWhereIncludeAsync(
                     p => p.Imagine.UtilizatorId == userId,
                     false,
@@ -186,10 +185,10 @@ namespace ProcessImage.Services
                 x => x.TipProcesare
                     }
                 );
-
                 var total = allProcessing.Count();
 
                 var pagedProcessing = allProcessing
+                    .OrderByDescending(p => p.DataProcesare)
                     .Skip(skip)
                     .Take(take)
                     .Select(p => new
@@ -197,8 +196,10 @@ namespace ProcessImage.Services
                         p.Id,
                         p.ImagineId,
                         TipProcesare = p.TipProcesare.Nume,
-                        p.Status,
-                        p.DataProcesare
+                        Status = p.Status.ToString(),
+                        DataProcesare = p.DataProcesare.ToString("dd/MM/yyyy HH:mm"),
+                        CaleFisier = p.Imagine.CaleFisier, 
+                        NumeImagine = p.Imagine.Nume + p.Imagine.Tip
                     })
                     .ToList();
 

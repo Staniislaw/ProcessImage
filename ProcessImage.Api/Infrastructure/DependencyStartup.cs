@@ -25,6 +25,7 @@ namespace ProcessImage.Infrastructure
             services.AddScoped<ISubscriptionsService, SubscriptionsService>();
             services.AddScoped<IUtilizatorService, UtilizatorService>();
             services.AddSingleton<ICacheService, CacheService>();
+            services.AddScoped<IImageCleanupService, ImageCleanupService>();
 
             services.AddMemoryCache();
             //.WithCronSchedule("0 */1 * * * ?")
@@ -40,6 +41,17 @@ namespace ProcessImage.Infrastructure
                     .ForJob(jobKey)
                     .WithIdentity("deleteLogsTrigger").WithCronSchedule("0 0 * * * ?")
                 );
+
+                var deleteImagesJobKey = new JobKey("DeleteOldImagesJob");
+
+                q.AddJob<DeleteOldImagesJob>(opts => opts.WithIdentity(deleteImagesJobKey));
+
+                q.AddTrigger(opts => opts
+                    .ForJob(deleteImagesJobKey)
+                    .WithIdentity("DeleteOldImagesJob-trigger")
+                    .WithCronSchedule("0 */30 * * * ?") //la fiecare 30min         
+                );
+
             });
             services.AddQuartzHostedService(options =>
             {

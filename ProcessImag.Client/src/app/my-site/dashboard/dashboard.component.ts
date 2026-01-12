@@ -10,6 +10,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Observable } from 'rxjs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltip } from "@angular/material/tooltip";
+import { MatButtonModule } from '@angular/material/button';
+import { environment } from '../../../environments/environment';
 export enum DataType {
   Files = 'FilesData',
   Processing = 'ProcessingData'
@@ -26,7 +28,8 @@ export enum DataType {
     MatProgressSpinnerModule,
     MatPaginatorModule,
     MatSelectModule,
-    MatTooltip
+    MatTooltip,
+    MatButtonModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
@@ -41,9 +44,8 @@ export class DashboardComponent implements OnInit {
   stats: Stat[] = [];
   processingData: ProcessingData[] = [];
   filesData: FileData[] = [];
-  processingColumns: string[] = ['id', 'imagineId', 'tipProcesare', 'status', 'dataProcesare', 'actions'];
+  processingColumns: string[] = ['id', 'imagineId', 'preview', 'tipProcesare', 'status', 'dataProcesare', 'actions'];
   filesColumns: string[] = ['id', 'nume', 'tip', 'utilizatorId', 'dataIncarcarii', 'actions'];
-
 
   // Pentru Files
   pageSizeFiles = 10;
@@ -156,5 +158,37 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => console.error('Eroare la ștergere:', err)
     });
+  }
+  downloadImage(caleFisier: string, numeImagine: string): void {
+    if (!caleFisier) return;
+
+    // Extrage userId și fileName din caleFisier
+    // caleFisier = "uploads/imagini/123/abc-def.png"
+    const parts = caleFisier.split('/');
+    const userId = parts[2]; // "123"
+    const fileName = parts[3]; // "abc-def.png"
+
+    this.dashboardService.downloadImage(Number(userId), fileName).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = numeImagine || 'imagine-procesata.png';
+        link.click();
+
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Eroare la descărcare:', err);
+        alert('Nu s-a putut descărca imaginea!');
+      }
+    });
+  }
+  getImageUrl(caleFisier: string): string {
+    if (!caleFisier) {
+      return 'assets/no-image.png';
+    }
+    const url = `${environment.baseUrl}/${caleFisier}`;
+    return url;
   }
 }

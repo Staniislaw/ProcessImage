@@ -46,6 +46,8 @@ namespace ProcessImage.Helpers
             ProcessImage = 1,
             [EnumMember(Value = "Utilizatori")]
             Utilizatori = 2,
+            [EnumMember(Value = "ImageCleanup")] 
+            ImageCleanup = 3,
         }
 
         public static void LogInformation(LogApplication applicationType, int userId, string loggerType, string message)
@@ -79,6 +81,9 @@ namespace ProcessImage.Helpers
                     break;
                 case LogApplication.Utilizatori:
                     logger = GetLogger($"{userId}_Utilizatori", $"{userId}_Utilizatori");
+                    break;
+                case LogApplication.ImageCleanup: 
+                    logger = GetLogger($"{userId}_ImageCleanup", $"{userId}_ImageCleanup");
                     break;
                 default:
                     logger = GetLogger($"{userId}_Appender", $"{userId}");

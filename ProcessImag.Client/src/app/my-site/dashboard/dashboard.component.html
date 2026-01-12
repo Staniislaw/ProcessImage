@@ -38,6 +38,13 @@
           <th mat-header-cell *matHeaderCellDef>Imagine ID</th>
           <td mat-cell *matCellDef="let element">#IMG-{{ element.imagineId }}</td>
         </ng-container>
+        <ng-container matColumnDef="preview">
+          <th mat-header-cell *matHeaderCellDef>Preview</th>
+          <td mat-cell *matCellDef="let element">
+            <img [src]="getImageUrl(element.caleFisier)" alt="Preview" class="image-preview"
+              (click)="downloadImage(element.caleFisier, element.numeImagine)" matTooltip="Click pentru download" />
+          </td>
+        </ng-container>
 
         <!-- Tip Procesare Column -->
         <ng-container matColumnDef="tipProcesare">

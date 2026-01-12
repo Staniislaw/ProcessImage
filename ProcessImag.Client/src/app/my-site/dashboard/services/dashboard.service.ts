@@ -16,6 +16,8 @@ export interface ProcessingData {
   tipProcesare: string;
   status: string;
   dataProcesare: string;
+  caleFisier: string;
+  numeImagine: string;
 }
 
 export interface FileData {
@@ -31,8 +33,7 @@ export interface FileData {
 })
 export class DashboardService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiBaseUrl}/DashBoard`;
-
+  apiUrl = `${environment.apiBaseUrl}/DashBoard`;
   getStats(): Observable<Stat[]> {
     return this.http.get<Stat[]>(`${this.apiUrl}/stats`).pipe(
       catchError(err => {
@@ -53,7 +54,6 @@ export class DashboardService {
       })
     );
   }
-
   getFilesData(pageIndex: number = 0, pageSize: number = 10): Observable<{ files: FileData[], total: number }> {
     const params = new HttpParams()
       .set('skip', (pageIndex * pageSize).toString())
@@ -82,5 +82,9 @@ export class DashboardService {
       })
     );
   }
-
+  downloadImage(userId: number, fileName: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/download/${fileName}`, {
+      responseType: 'blob'
+    });
+  }
 }

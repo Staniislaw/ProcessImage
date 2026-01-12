@@ -693,7 +693,6 @@ export class ProcessImageComponent implements OnInit {
     });
   }
 
-
   onCropAreaSelected(cropArea: CropArea) {
     this.customFieldValues['x'] = cropArea.x;
     this.customFieldValues['y'] = cropArea.y;

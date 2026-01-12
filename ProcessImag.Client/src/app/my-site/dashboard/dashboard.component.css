@@ -391,3 +391,24 @@ tbody tr:hover {
     font-size: 28px;
   }
 }
+.image-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid #e0e0e0;
+}
+
+.image-preview:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  border-color: #2196F3;
+}
+
+/* Dacă imaginea nu există */
+.image-preview[src*="no-image"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

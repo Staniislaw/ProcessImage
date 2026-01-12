@@ -171,5 +171,31 @@ namespace ProcessImage.Controllers
                 });
             }
         }
+
+        [HttpGet("download/{fileName}")]
+        public IActionResult DownloadImage(string fileName)
+        {
+            try
+            {
+                var userId = _baseService.GetUserId();
+                string basePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "imagini");
+                string userFolderPath = Path.Combine(basePath, userId.ToString());
+                string fullPath = Path.Combine(userFolderPath, fileName);
+
+                if (!System.IO.File.Exists(fullPath))
+                {
+                    return NotFound(new { message = "Fișierul nu a fost găsit" });
+                }
+
+                var fileBytes = System.IO.File.ReadAllBytes(fullPath);
+                var contentType = "image/png"; 
+
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Eroare la descărcarea fișierului", error = ex.Message });
+            }
+        }
     }
 }
