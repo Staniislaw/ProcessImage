@@ -83,7 +83,7 @@ namespace ProcessImage.Helpers
                     logger = GetLogger($"{userId}_Utilizatori", $"{userId}_Utilizatori");
                     break;
                 case LogApplication.ImageCleanup: 
-                    logger = GetLogger($"{userId}_ImageCleanup", $"{userId}_ImageCleanup");
+                    logger = GetLogger($"ImageCleanup", $"ImageCleanup");
                     break;
                 default:
                     logger = GetLogger($"{userId}_Appender", $"{userId}");
