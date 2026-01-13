@@ -11,14 +11,17 @@ namespace ProcessImage.Services
         private readonly IRepository<ProcesareImagine> _procesareRepository;
         private readonly IRepository<Imagine> _imagineRepository;
         private readonly IRepository<TipProcesare> _tipProcesareRepository;
+        private readonly ICacheService _cacheService;
         public ImageProcessingService(
             IRepository<Imagine> imagineRepository,
             IRepository<ProcesareImagine> procesareRepository,
-            IRepository<TipProcesare> tipProcesareRepository)
+            IRepository<TipProcesare> tipProcesareRepository,
+            ICacheService cacheService)
         {
             _imagineRepository = imagineRepository;
             _procesareRepository = procesareRepository;
             _tipProcesareRepository = tipProcesareRepository;
+            _cacheService = cacheService;
         }
         public async Task<long> SaveProcessedImageAsync(byte[] imageBytes, string originalFileName, long utilizatorId)
         {
@@ -56,6 +59,7 @@ namespace ProcessImage.Services
                 };
 
                 await _imagineRepository.AddAsync(imagine);
+                InvalidateUserCache(utilizatorId);
                 return imagine.Id;
             }
             catch (Exception ex)
@@ -77,6 +81,11 @@ namespace ProcessImage.Services
                     DataProcesare = DateTime.Now
                 };
                 await _procesareRepository.AddAsync(procesare);
+                var imagine = await _imagineRepository.GetAsync(i => i.Id == imagineId);
+                if (imagine != null)
+                {
+                    InvalidateUserCache(imagine.UtilizatorId);
+                }
             }
             catch (Exception ex)
             {
@@ -135,6 +144,12 @@ namespace ProcessImage.Services
         {
             var processingTypes = await _tipProcesareRepository.GetAllAsync();
             return processingTypes.ToList();
+        }
+        private void InvalidateUserCache(long userId)
+        {
+            _cacheService.RemoveByPattern($"dashboard_stats_{userId}");
+            _cacheService.RemoveByPattern($"dashboard_processing_{userId}");
+            _cacheService.RemoveByPattern($"dashboard_files_{userId}");
         }
     }
 }
